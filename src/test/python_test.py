@@ -71,3 +71,8 @@ p = Person(name='John', age=20, friends=[], page=1, pagesize=500) # type: ignore
 req = Request[Person]('query', p)
 print(req.to_json())
 print(type(p))
+
+abc = """'
+    abcefg
+    '"""
+print(abc)

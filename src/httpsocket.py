@@ -16,7 +16,7 @@ class HttpHeader:
             for e in v:
                 yield k, e
 
-    def merge(self, other: 'HttpHeader'):
+    def extend(self, other: 'HttpHeader'):
         for k, v in other.items():
             self.add(k, v)
 
