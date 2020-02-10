@@ -3,6 +3,7 @@ from ..httpsocket import HttpSocket, HttpRequest
 from dataclasses import dataclass, field, MISSING, fields
 from dataclasses_json import config, DataClassJsonMixin
 import re
+from .jb_internal import session_conf as conf
 
 
 def json(*, name: Optional[str] = None, default=MISSING, factory=MISSING):
@@ -36,7 +37,7 @@ class Page:
     totals: List[Dict[str, str]] = json(factory=list)
 
 
-def params(cls=None, /, *, id='',
+def params(cls=None, / , *, id='',
            page: Optional[Page] = None, **kwargs):
 
     def wrap(cls):
@@ -111,6 +112,7 @@ class Session(HttpSocket):
 
     def __init__(self, host: str, port: int,
                  user_id: str, password: str):
+        super().__init__(host, port)
         self._user_id = user_id
         self._password = password
 
@@ -180,6 +182,18 @@ class Session(HttpSocket):
     def logout(self) -> str:
         self.request_service('syslogout')
         return self.read_body()
+
+    def __enter__(self):
+        self.login()
+        return self
+
+    def __exit__(self, e_t, e_v, t_b):
+        self.logout()
+        self.close()
+
+    @staticmethod
+    def use(id) -> 'Session':
+        return Session(conf.host, conf.port, conf.users[id].id, conf.users[id].pwd)
 
 
 @params(id='syslogin')
