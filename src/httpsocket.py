@@ -1,4 +1,4 @@
-from typing import Dict, List, Iterable, Tuple, Final, Union
+from typing import Dict, List, Iterable, Tuple, Final, Union, Optional
 from socket import socket, AF_INET, SOCK_STREAM
 
 
@@ -10,6 +10,9 @@ class HttpHeader:
         if key not in self._header:
             self._header[key] = []
         self._header[key].append(value.lower())
+
+    def get(self, key: str, default=None) -> Optional[List[str]]:
+        return self._header.get(key.lower(), default)
 
     def items(self) -> Iterable[Tuple[str, str]]:
         for k, v in self._header.items():
@@ -82,6 +85,7 @@ class HttpSocket:
         self._socket = socket(AF_INET, SOCK_STREAM)
         self._socket.connect((self._host, self._port))
 
+    @property
     def url(self) -> str:
         return f"{self._host}:{self._port}"
 
@@ -155,13 +159,17 @@ class HttpSocket:
 
     def get_http(self, path: str, encoding='utf-8') -> str:
         request = HttpRequest(path, encoding=encoding)
-        request.add_header("Host", self.url()) \
+        request.add_header("Host", self.url) \
             .add_header("Connection", "keep-alive") \
             .add_header("Cache-Control", "max-age=0") \
             .add_header("Upgrade-Insecure-Requests", "1") \
             .add_header("User-Agent",
-                        "Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36") \
-            .add_header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8") \
+                        "Mozilla/5.0 (Windows NT 6.1; Win64; x64) "
+                        "AppleWebKit/537.36 (KHTML, like Gecko) "
+                        "Chrome/71.0.3578.98 Safari/537.36") \
+            .add_header("Accept",
+                        "text/html,application/xhtml+xml,application/xml;"
+                        "q=0.9,image/webp,image/apng,*/*;q=0.8") \
             .add_header("Accept-Encoding", "gzip, deflate") \
             .add_header("Accept-Language", "zh-CN,zh;q=0.9")
         self.write_bytes(request.to_bytes())

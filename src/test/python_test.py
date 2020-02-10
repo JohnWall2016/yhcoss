@@ -1,10 +1,10 @@
 import dataclasses
 from dataclasses import dataclass, field, MISSING, fields
 from dataclasses_json import dataclass_json, config, DataClassJsonMixin
-from typing import Type, TypeVar, List, Literal, Generic, Dict, List, Union, Callable
+from typing import Type, TypeVar, List, Literal, Generic, Dict, List, Union, Callable, Optional
 
 
-def json(name: str = None, default=MISSING):
+def json(name: Optional[str] = None, default=MISSING):
     return field(metadata=config(field_name=name), default=default)
 
 
@@ -53,7 +53,9 @@ class Person(Jsonable):
 class SomeQuery(Jsonable):
     aac22: str = ''
 
-p = Person(name='John', age=20, friends=[], page=1, pagesize=500) # type: ignore
+
+p = Person(name='John', age=20, friends=[],
+           page=1, pagesize=500)  # type: ignore
 req = Request[Person]('query', p)
 print(req.to_json())
 print(type(p))
@@ -67,7 +69,8 @@ print(type(p1) == type(p))
 print(type(p1).__hash__)
 print(type(p).__hash__)
 
-p = Person(name='John', age=20, friends=[], page=1, pagesize=500) # type: ignore
+p = Person(name='John', age=20, friends=[],
+           page=1, pagesize=500)  # type: ignore
 req = Request[Person]('query', p)
 print(req.to_json())
 print(type(p))
@@ -76,3 +79,7 @@ abc = """'
     abcefg
     '"""
 print(abc)
+
+print("abcefg"
+      "hijijlj"
+      "ljlsjdfl")
