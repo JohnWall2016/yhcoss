@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from ..jb.session import Service, Parameters, params
+from ...jb.session import Service, Parameters, params
 
 print(Service(Parameters('loadCurrentUser'), 'wj', 'abc').to_json())
 
