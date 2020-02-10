@@ -1,4 +1,4 @@
-from typing import Optional, TypeVar, Generic, List, ClassVar, Union, Type, Dict
+from typing import Optional, TypeVar, Generic, List, ClassVar, Union, Type, Dict, Final
 from ..httpsocket import HttpSocket, HttpRequest
 from dataclasses import dataclass, field, MISSING, fields
 from dataclasses_json import config, DataClassJsonMixin
@@ -27,19 +27,33 @@ class Parameters(Jsonable):
         self._service_id = id
 
 
-def params(cls=None, / , *, id='', page=False, **kwargs):
+@dataclass
+class Page:
+    page: int = 1
+    pagesize: int = 15
+    filtering: List[Dict[str, str]] = json(factory=list)
+    sorting: List[Dict[str, str]] = json(factory=list)
+    totals: List[Dict[str, str]] = json(factory=list)
+
+
+def params(cls=None, /, *, id='',
+           page: Optional[Page] = None, **kwargs):
 
     def wrap(cls):
         cls = dataclass(cls, **kwargs)
         cls._service_id = id
         if page:
+            page_ = page
             @dataclass
             class DataPage(cls):
-                page: int = 1
-                pagesize: int = 15
-                filtering: List[Dict[str, str]] = json(factory=list)
-                sorting: List[Dict[str, str]] = json(factory=list)
-                totals: List[Dict[str, str]] = json(factory=list)
+                page: int = page_.page
+                pagesize: int = page_.pagesize
+                filtering: List[Dict[str, str]] = json(
+                    factory=lambda: list(page_.filtering))
+                sorting: List[Dict[str, str]] = json(
+                    factory=lambda: list(page_.sorting))
+                totals: List[Dict[str, str]] = json(
+                    factory=lambda: list(page_.totals))
             return DataPage
         return cls
 
@@ -60,7 +74,7 @@ class Service(Jsonable):
 
     def __init__(self, params: Parameters, user_id: str, password: str):
         self.serviceid = params.service_id
-        print(self.serviceid)
+        # print(self.serviceid)
         self.loginname = user_id
         self.password = password
         self.params = params
