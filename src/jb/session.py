@@ -6,7 +6,7 @@ import re
 from .jb_internal import session_conf as conf
 
 
-def json(*, name: Optional[str] = None, default=MISSING, factory=MISSING):
+def json(name: Optional[str] = None, default=MISSING, *, factory=MISSING):
     if default != MISSING:
         return field(metadata=config(field_name=name), default=default)
     else:
@@ -163,7 +163,7 @@ class Session(HttpSocket):
         self.request_service('loadCurrentUser')
         header = self.read_header()
         cookies = header.get("set-cookie", [])
-        for cookie in cookies: # type: ignore
+        for cookie in cookies:  # type: ignore
             m = re.search(r'([^=]+?)=(.+?);', cookie)
             if m:
                 self._cookies[m.group(1)] = m.group(2)
@@ -194,3 +194,104 @@ class Session(HttpSocket):
 class Syslogin(Parameters):
     username: str
     passwd: str
+
+
+@params(id='executeSncbxxConQ')
+class CbxxQuery(Parameters):
+    idcard: str = json(name='aac002')
+
+
+@dataclass
+class Cbstate:
+    '''
+    参保状态
+    '''
+    cbstate: Optional[str] = json('aac008', None)
+
+    def __str__(self):
+        return {
+            "0": "未参保",
+            "1": "正常参保",
+            "2": "暂停参保",
+            "4": "终止参保",
+        }.get(self.cbstate,
+              f'未知值: {self.cbstate}')
+
+
+@dataclass
+class Jfstate:
+    '''
+    缴费状态
+    '''
+    jfstate: Optional[str] = json('aac031', None)
+
+    def __str__(self):
+        return {
+            "1": "参保缴费",
+            "2": "暂停缴费",
+            "3": "终止缴费",
+        }.get(self.jfstate,
+              f'未知值: {self.jfstate}')
+
+
+def _jbstate(jfstate, cbstate):
+    if jfstate == '1':
+        if cbstate == '1':
+            return '正常缴费人员'
+        else:
+            return f'未知类型参保缴费人员: {cbstate}'
+    elif jfstate == '2':
+        if cbstate == '2':
+            return '暂停缴费人员'
+        else:
+            return f'未知类型暂停缴费人员: {cbstate}'
+    elif jfstate == '3':
+        if cbstate == '1':
+            return '正常待遇人员'
+        elif cbstate == '2':
+            return '暂停待遇人员'
+        elif cbstate == '4':
+            return '终止参保人员'
+        else:
+            return f'未知类型终止缴费人员: {cbstate}'
+    elif jfstate == None:
+        return '未参保'
+    else:
+        return f'未知类型人员: {jfstate}, {cbstate}'
+
+
+@dataclass
+class Cbxx(Jsonable, Cbstate, Jfstate):
+    pid: Optional[int] = json('aac001', None)  # 个人编号
+    idcard: Optional[str] = json('aac002', None)  # 身份证号码
+    name: str = json('aac003', '')
+    birthday: str = json('aac006', '')
+
+    cbdate: str = json('aac049', '')  # 参保时间
+    sfcode: str = json('aac066', '')  # 参保身份编码
+    agancy: str = json('aaa129', '')  # 社保机构
+    optime: str = json('aae036', '')  # 经办时间
+    qhcode: str = json('aaf101', '')  # 行政区划编码
+    czname: str = json('aaf102', '')  # 村组名称
+    csname: str = json('aaf103', '')  # 村社区名称
+
+    @property
+    def jbstate(self):
+        return _jbstate(self.jfstate, self.cbstate)
+
+    @property
+    def jbclass(self):
+        return {
+            "011": "普通参保人员",
+            "021": "残一级",
+            "022": "残二级",
+            "031": "特困一级",
+            "051": "贫困人口一级",
+            "061": "低保对象一级",
+            "062": "低保对象二级",
+        }.get(self.sfcode,
+              f'未知身份类型: {self.sfcode}')
+
+    @property
+    def valid(self):
+        return self.idcard is not None
