@@ -163,7 +163,7 @@ class Session(HttpSocket):
         self.request_service('loadCurrentUser')
         header = self.read_header()
         cookies = header.get("set-cookie", [])
-        for cookie in cookies:
+        for cookie in cookies: # type: ignore
             m = re.search(r'([^=]+?)=(.+?);', cookie)
             if m:
                 self._cookies[m.group(1)] = m.group(2)
@@ -185,7 +185,7 @@ class Session(HttpSocket):
         self.close()
 
     @staticmethod
-    def use(id) -> 'Session':
+    def use(id='002') -> 'Session':
         return Session(conf.host, conf.port,
                        conf.users[id].id, conf.users[id].pwd)
 
