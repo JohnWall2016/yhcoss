@@ -37,7 +37,7 @@ class Page:
     totals: List[Dict[str, str]] = json(factory=list)
 
 
-def params(cls=None, / , *, id='',
+def params(cls=None, /, *, id='',
            page: Optional[Page] = None, **kwargs):
 
     def wrap(cls):
@@ -107,8 +107,7 @@ class Result(Jsonable, Generic[U]):
 class Session(HttpSocket):
     _user_id: str
     _password: str
-    _session_id: Optional[str] = None
-    _cxcookie: Optional[str] = None
+    _cookies: Dict[str, str] = {}
 
     def __init__(self, host: str, port: int,
                  user_id: str, password: str):
@@ -131,10 +130,9 @@ class Session(HttpSocket):
             .add_header("Referer", f"http://{self.url}/hncjb/pages/html/index.html") \
             .add_header("Accept-Encoding", "gzip, deflate") \
             .add_header("Accept-Language", "zh-CN,zh;q=0.8")
-        if self._session_id:
-            request.add_header("Cookie",
-                               f"jsessionid_ylzcbp={self._session_id}; "
-                               f"cxcookie={self._cxcookie}")
+        if self._cookies:
+            request.add_header(
+                "Cookie", '; '.join((f'{k}={v}' for k, v in self._cookies.items())))
         return request
 
     def build_request(self, content: str) -> HttpRequest:
@@ -165,15 +163,10 @@ class Session(HttpSocket):
         self.request_service('loadCurrentUser')
         header = self.read_header()
         cookies = header.get("set-cookie", [])
-        if cookies:
-            for cookie in cookies:
-                m = re.search(r'jsessionid_ylzcbp=(.+?);', cookie)
-                if m:
-                    self._session_id = m.group(1)
-                    continue
-                m = re.search(r'cxcookie=(.+?);', cookie)
-                if m:
-                    self._cxcookie = m.group(1)
+        for cookie in cookies:
+            m = re.search(r'([^=]+?)=(.+?);', cookie)
+            if m:
+                self._cookies[m.group(1)] = m.group(2)
         self.read_body(header)
         self.request_service(
             Syslogin(self._user_id, self._password))  # type: ignore
@@ -193,7 +186,8 @@ class Session(HttpSocket):
 
     @staticmethod
     def use(id) -> 'Session':
-        return Session(conf.host, conf.port, conf.users[id].id, conf.users[id].pwd)
+        return Session(conf.host, conf.port,
+                       conf.users[id].id, conf.users[id].pwd)
 
 
 @params(id='syslogin')

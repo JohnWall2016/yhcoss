@@ -1,4 +1,4 @@
-from typing import Dict, List, Iterable, Tuple, Final, Union, Optional
+from typing import Dict, List, Iterable, Tuple, Final, Union, Optional, TypeVar
 from socket import socket, AF_INET, SOCK_STREAM
 
 
@@ -11,7 +11,8 @@ class HttpHeader:
             self._header[key] = []
         self._header[key].append(value.lower())
 
-    def get(self, key: str, default=None) -> Optional[List[str]]:
+    def get(self, key: str,
+            default: Union[List[str], None] = None) -> Union[List[str], None]:
         return self._header.get(key.lower(), default)
 
     def items(self) -> Iterable[Tuple[str, str]]:
