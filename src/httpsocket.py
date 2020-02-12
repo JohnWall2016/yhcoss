@@ -3,13 +3,14 @@ from socket import socket, AF_INET, SOCK_STREAM
 
 
 class HttpHeader:
-    _header: Dict[str, List[str]] = {}
+    def __init__(self):
+        self._header: Dict[str, List[str]] = {}
 
     def add(self, key: str, value: str):
         key = key.lower()
         if key not in self._header:
             self._header[key] = []
-        self._header[key].append(value.lower())
+        self._header[key].append(value)
 
     def get(self, key: str,
             default: Union[List[str], None] = None) -> Union[List[str], None]:
@@ -32,12 +33,6 @@ class HttpHeader:
 
 
 class HttpRequest:
-    _header: HttpHeader = HttpHeader()
-    _body: bytes = b''
-    _path: str = ''
-    _method: str = ''
-    _encoding: str = ''
-
     def __init__(self, path: str, method='GET',
                  header: HttpHeader = None, encoding='utf-8'):
         self._path = path
@@ -45,6 +40,9 @@ class HttpRequest:
         self._encoding = encoding
         if header:
             self._header = header
+        else:
+            self._header = HttpHeader()
+        self._body = b''
 
     def add_header(self, key: str, value: str) -> 'HttpRequest':
         self._header.add(key, value)
@@ -59,7 +57,7 @@ class HttpRequest:
 
         def add_to_buffer(data: str):
             nonlocal buffer
-            buffer += str.encode(self._encoding)
+            buffer += data.encode(self._encoding)
 
         add_to_buffer(f'{self._method} {self._path} HTTP/1.1\r\n')
         for k, v in self._header.items():
@@ -74,11 +72,6 @@ class HttpRequest:
 
 
 class HttpSocket:
-    _host: str
-    _port: int
-    _socket: socket
-    _encoding: str
-
     def __init__(self, host: str, port: int, encoding: str = 'utf-8'):
         self._host = host
         self._port = port
@@ -103,16 +96,21 @@ class HttpSocket:
         return self._socket.recv(size)
 
     def read_line(self) -> str:
-        line, cur, next = b'', b'', b''
+        line, cur, nex = b'', b'', b''
         while True:
             cur = self._socket.recv(1)
+            if not cur:
+                break
             if cur == b'\x0d':
-                next = self._socket.recv(1)
-                if next == b'\x0a':
+                nex = self._socket.recv(1)
+                if not nex:
+                    line += cur
+                    break
+                elif nex == b'\x0a':
                     break
                 else:
                     line += cur
-                    line += next
+                    line += nex
             else:
                 line += cur
         return line.decode(self._encoding)

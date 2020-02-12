@@ -1,4 +1,4 @@
-from typing import Optional, TypeVar, Generic, List, ClassVar, Union, Type, Dict, Final
+from typing import Optional, TypeVar, Generic, List, ClassVar, Union, Type, Dict, Final, Protocol
 from ..httpsocket import HttpSocket, HttpRequest
 from dataclasses import dataclass, field, MISSING, fields
 from dataclasses_json import config, DataClassJsonMixin
@@ -37,7 +37,7 @@ class Page:
     totals: List[Dict[str, str]] = json(factory=list)
 
 
-def params(cls=None, /, *, id='',
+def params(cls=None, / , *, id='',
            page: Optional[Page] = None, **kwargs):
 
     def wrap(cls):
@@ -82,11 +82,11 @@ class Service(Jsonable):
         self.datas = [params]
 
 
+T = TypeVar('T')
 U = TypeVar('U', bound=Jsonable)
 
 
-@dataclass
-class Result(Jsonable, Generic[U]):
+class Result(Protocol, Generic[U]):
     rowcount: str
     page: int
     pagesize: int
@@ -97,23 +97,58 @@ class Result(Jsonable, Generic[U]):
     messagedetail: str
     datas: List[U]
 
-    def __len__(self):
-        return len(self.datas or [])
+    def __len__(self) -> int:
+        ...
 
     def __getitem__(self, key: int) -> U:
-        return self.datas[key]
+        ...
+
+    def to_json(self) -> str:
+        ...
+
+    @classmethod
+    def from_json(cls: Type[T],
+                  s: str,
+                  *,
+                  encoding=None,
+                  parse_float=None,
+                  parse_int=None,
+                  parse_constant=None,
+                  infer_missing=False,
+                  **kw) -> T:
+        ...
+
+
+def result(cls: Type[U]) -> Type[Result[U]]:
+    cls = dataclass(cls)
+    @dataclass
+    class _Result(Jsonable):
+        rowcount: str
+        page: int
+        pagesize: int
+        serviceid: str
+        type: str
+        vcode: str
+        message: str
+        messagedetail: str
+        datas: List[cls]  # type: ignore
+
+        def __len__(self):
+            return len(self.datas or [])
+
+        def __getitem__(self, key: int) -> U:
+            return self.datas[key]
+
+    return _Result
 
 
 class Session(HttpSocket):
-    _user_id: str
-    _password: str
-    _cookies: Dict[str, str] = {}
-
     def __init__(self, host: str, port: int,
                  user_id: str, password: str):
         super().__init__(host, port)
         self._user_id = user_id
         self._password = password
+        self._cookies: Dict[str, str] = {}
 
     def create_request(self) -> HttpRequest:
         request = HttpRequest("/hncjb/reports/crud", method="POST")
@@ -139,10 +174,13 @@ class Session(HttpSocket):
         return self.create_request().add_body(content)
 
     def request(self, content: str):
-        self.write_bytes(self.build_request(content).to_bytes())
+        req = self.build_request(content).to_bytes()
+        # print(f"{req=}")
+        self.write_bytes(req)
 
     def request_service(self, params_or_id: Union[Parameters, str]):
-        self.request(self.service_to_json(params_or_id))
+        req = self.service_to_json(params_or_id)
+        self.request(req)
 
     def service_to_json(self, params_or_id: Union[Parameters, str]):
         service = None
@@ -153,11 +191,11 @@ class Session(HttpSocket):
             service = Service(params_or_id, self._user_id, self._password)
         return service.to_json()
 
-    def get_result(self, cls: Type[U]) -> Result[U]:
+    def get_result(self, cls: Type[U]) -> U:
         return self.result_from_json(cls, self.read_body())
 
-    def result_from_json(self, cls: Type[U], json: str) -> Result[U]:
-        return Result[U].from_json(json)
+    def result_from_json(self, cls: Type[U], json: str) -> U:
+        return cls.from_json(json)
 
     def login(self) -> str:
         self.request_service('loadCurrentUser')
@@ -202,13 +240,12 @@ class CbxxQuery(Parameters):
 
 
 @dataclass
-class Cbstate:
-    '''
-    参保状态
-    '''
-    cbstate: Optional[str] = json('aac008', None)
+class Sbstate:
+    cbstate: Optional[str] = json('aac008', None)  # 参保状态
+    jfstate: Optional[str] = json('aac031', None)  # 缴费状态
 
-    def __str__(self):
+    @property
+    def cbstate_ch(self):
         return {
             "0": "未参保",
             "1": "正常参保",
@@ -217,15 +254,8 @@ class Cbstate:
         }.get(self.cbstate,
               f'未知值: {self.cbstate}')
 
-
-@dataclass
-class Jfstate:
-    '''
-    缴费状态
-    '''
-    jfstate: Optional[str] = json('aac031', None)
-
-    def __str__(self):
+    @property
+    def jfstate_ch(self):
         return {
             "1": "参保缴费",
             "2": "暂停缴费",
@@ -233,39 +263,43 @@ class Jfstate:
         }.get(self.jfstate,
               f'未知值: {self.jfstate}')
 
+    @property
+    def jbstate_cn(self):
+        return Sbstate.get_jbstate_cn(self.jfstate, self.cbstate)
 
-def _jbstate(jfstate, cbstate):
-    if jfstate == '1':
-        if cbstate == '1':
-            return '正常缴费人员'
+    @staticmethod
+    def get_jbstate_cn(jfstate, cbstate):
+        if jfstate == '1':
+            if cbstate == '1':
+                return '正常缴费人员'
+            else:
+                return f'未知类型参保缴费人员: {cbstate}'
+        elif jfstate == '2':
+            if cbstate == '2':
+                return '暂停缴费人员'
+            else:
+                return f'未知类型暂停缴费人员: {cbstate}'
+        elif jfstate == '3':
+            if cbstate == '1':
+                return '正常待遇人员'
+            elif cbstate == '2':
+                return '暂停待遇人员'
+            elif cbstate == '4':
+                return '终止参保人员'
+            else:
+                return f'未知类型终止缴费人员: {cbstate}'
+        elif jfstate == None:
+            return '未参保'
         else:
-            return f'未知类型参保缴费人员: {cbstate}'
-    elif jfstate == '2':
-        if cbstate == '2':
-            return '暂停缴费人员'
-        else:
-            return f'未知类型暂停缴费人员: {cbstate}'
-    elif jfstate == '3':
-        if cbstate == '1':
-            return '正常待遇人员'
-        elif cbstate == '2':
-            return '暂停待遇人员'
-        elif cbstate == '4':
-            return '终止参保人员'
-        else:
-            return f'未知类型终止缴费人员: {cbstate}'
-    elif jfstate == None:
-        return '未参保'
-    else:
-        return f'未知类型人员: {jfstate}, {cbstate}'
+            return f'未知类型人员: {jfstate}, {cbstate}'
 
 
-@dataclass
-class Cbxx(Jsonable, Cbstate, Jfstate):
+@result
+class Cbxx(Jsonable, Sbstate):
     pid: Optional[int] = json('aac001', None)  # 个人编号
     idcard: Optional[str] = json('aac002', None)  # 身份证号码
     name: str = json('aac003', '')
-    birthday: str = json('aac006', '')
+    birthday: Optional[int] = json('aac006', None)
 
     cbdate: str = json('aac049', '')  # 参保时间
     sfcode: str = json('aac066', '')  # 参保身份编码
@@ -274,10 +308,6 @@ class Cbxx(Jsonable, Cbstate, Jfstate):
     qhcode: str = json('aaf101', '')  # 行政区划编码
     czname: str = json('aaf102', '')  # 村组名称
     csname: str = json('aaf103', '')  # 村社区名称
-
-    @property
-    def jbstate(self):
-        return _jbstate(self.jfstate, self.cbstate)
 
     @property
     def jbclass(self):
