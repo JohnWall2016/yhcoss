@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from ...jb.session import Service, Parameters, params, Page, Session, Optional, CbxxQuery, Cbxx, Result
+from ...jb.session import Service, Parameters, params, Page, Session, Optional, CbxxQuery, Cbxx, Result, CbshQuery, Cbsh
 from typing import get_type_hints
 import typing_inspect
 
@@ -40,6 +40,13 @@ with Session.use('002') as session:
               result[0].jfstate_ch, result[0].jbstate_cn)
         print(result[0].birthday, type(result[0].birthday))
     print(result)
+
+    session.request_service(CbshQuery(start_date='2020-02-14'))
+    result = session.get_result(Cbsh)
+    idx = 0
+    for cbsh in result.datas:
+        idx += 1
+        print(f'{idx} {cbsh.name} {cbsh.idcard} {cbsh.birthday}')
 
 #hints = get_type_hints(Result[Cbxx])
 # print(hints['datas'])

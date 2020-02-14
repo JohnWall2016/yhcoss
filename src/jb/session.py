@@ -325,3 +325,31 @@ class Cbxx(Jsonable, Sbstate):
     @property
     def valid(self):
         return self.idcard is not None
+
+@params(id='cbshQuery', page=Page(pagesize=500))
+class CbshQuery(Parameters):
+    aaf013: str = ""
+    aaf030: str = ""
+    aae011: str = ""
+    aae036: str = ""
+    aae036s: str = ""
+    aae014: str = ""
+    aac009: str = ""
+    aac002: str = ""
+    aac003: str = ""
+    sfccb: str = ""
+
+    start_date: str = json('aae015', '')
+    end_date: str = json('aae015s', '')
+    shzt: str = json('aae016', '1')
+
+    def __init__(self, start_date='', end_date='', shzt=''):
+        self.start_date = start_date
+        self.end_date = end_date
+        self.shzt = shzt
+
+@result
+class Cbsh(Jsonable):
+    idcard: str = json('aac002')
+    name: str = json('aac003')
+    birthday: str = json('aac006')
