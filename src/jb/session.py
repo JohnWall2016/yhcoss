@@ -122,7 +122,7 @@ class Result(Protocol, Generic[U]):
 def result(cls: Type[U]) -> Type[Result[U]]:
     cls = dataclass(cls)
     @dataclass
-    class _Result(Jsonable):
+    class _Result(Jsonable, Result):
         rowcount: str
         page: int
         pagesize: int
