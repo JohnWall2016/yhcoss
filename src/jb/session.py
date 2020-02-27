@@ -113,6 +113,8 @@ def result_class(cls: Type[T]) -> Type[Result[T]]:
 
 
 class Session(HttpSocket):
+    _result_classes: Dict = {}
+
     def __init__(self, host: str, port: int,
                  user_id: str, password: str):
         super().__init__(host, port)
@@ -161,8 +163,9 @@ class Session(HttpSocket):
             service = Service(params_or_id, self._user_id, self._password)
         return service.to_json()
 
-    def get_result(self, cls: Type[U]) -> Optional[U]:
-        return self.result_from_json(cls, self.read_body())
+    def get_result(self, cls: Type[T]) -> Optional[Result[T]]:
+        result_cls = self._result_classes.setdefault(cls, result_class(cls))
+        return self.result_from_json(result_cls, self.read_body())
 
     def result_from_json(self, cls: Type[U], json: str) -> Optional[U]:
         return cls.from_json(json)
@@ -304,9 +307,6 @@ class Cbxx(Sbstate):
         return self.idcard is not None
 
 
-CbxxResult = result_class(Cbxx)
-
-
 @dataclass
 @params(id='cbshQuery')
 class CbshQuery(Page):
@@ -331,6 +331,3 @@ class Cbsh:
     idcard: str = jfield('aac002')
     name: str = jfield('aac003')
     birthday: str = jfield('aac006')
-
-
-CbshResult = result_class(Cbsh)

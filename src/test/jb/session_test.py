@@ -34,7 +34,7 @@ import typing_inspect
 
 with Session.use() as session:
     session.request_service(CbxxQuery(idcard='430321196408086422'))
-    result = session.get_result(CbxxResult)
+    result = session.get_result(Cbxx)
     if result and len(result) > 0:
         print(result[0].name, result[0].cbstate_ch,
               result[0].jfstate_ch, result[0].jbstate_cn)
@@ -42,7 +42,7 @@ with Session.use() as session:
     print(result)
 
     session.request_service(CbshQuery(start_date='2020-02-14'))
-    result = session.get_result(CbshResult)
+    result = session.get_result(Cbsh)
     if result:
         idx = 0
         for cbsh in result.datas:
