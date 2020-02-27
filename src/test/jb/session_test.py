@@ -32,10 +32,10 @@ import typing_inspect
 #
 # print(Service(SysloginP("abc", "123"), 'wj', 'abc').to_json())  # type: ignore
 
-with Session.use('002') as session:
+with Session.use() as session:
     session.request_service(CbxxQuery(idcard='430321196408086422'))
     result = session.get_result(CbxxResult)
-    if len(result) > 0:
+    if result and len(result) > 0:
         print(result[0].name, result[0].cbstate_ch,
               result[0].jfstate_ch, result[0].jbstate_cn)
         print(result[0].birthday, type(result[0].birthday))
@@ -43,7 +43,8 @@ with Session.use('002') as session:
 
     session.request_service(CbshQuery(start_date='2020-02-14'))
     result = session.get_result(CbshResult)
-    idx = 0
-    for cbsh in result.datas:
-        idx += 1
-        print(f'{idx} {cbsh.name} {cbsh.idcard} {cbsh.birthday}')
+    if result:
+        idx = 0
+        for cbsh in result.datas:
+            idx += 1
+            print(f'{idx} {cbsh.name} {cbsh.idcard} {cbsh.birthday}')

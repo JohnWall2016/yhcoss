@@ -46,7 +46,7 @@ def _to_dict(obj: Any) -> Any:
 
 
 def _from_dict(cls, dict: Any, rootcls):
-    print(f'{cls=}')
+    # print(f'{cls=}')
     if isinstance_safe(dict, cls):
         return dict
     elif is_dataclass(cls) and isinstance_safe(dict, Mapping):

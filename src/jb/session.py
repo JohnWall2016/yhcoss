@@ -211,6 +211,10 @@ class CbxxQuery:
     idcard: str = jfield(name='aac002')
 
 
+def match(value, dict: Dict, fail=lambda v: f'未知值: {v}'):
+    return dict.get(value, fail(value))
+
+
 @dataclass
 class Sbstate:
     cbstate: Optional[str] = jfield('aac008', default=None)  # 参保状态
@@ -218,22 +222,22 @@ class Sbstate:
 
     @property
     def cbstate_ch(self):
-        return {
-            "0": "未参保",
-            "1": "正常参保",
-            "2": "暂停参保",
-            "4": "终止参保",
-        }.get(self.cbstate,
-              f'未知值: {self.cbstate}')
+        return match(self.cbstate,
+                     {
+                         "0": "未参保",
+                         "1": "正常参保",
+                         "2": "暂停参保",
+                         "4": "终止参保",
+                     })
 
     @property
     def jfstate_ch(self):
-        return {
-            "1": "参保缴费",
-            "2": "暂停缴费",
-            "3": "终止缴费",
-        }.get(self.jfstate,
-              f'未知值: {self.jfstate}')
+        return match(self.jfstate,
+                     {
+                         "1": "参保缴费",
+                         "2": "暂停缴费",
+                         "3": "终止缴费",
+                     })
 
     @property
     def jbstate_cn(self):
@@ -283,16 +287,17 @@ class Cbxx(Sbstate):
 
     @property
     def jbclass(self):
-        return {
-            "011": "普通参保人员",
-            "021": "残一级",
-            "022": "残二级",
-            "031": "特困一级",
-            "051": "贫困人口一级",
-            "061": "低保对象一级",
-            "062": "低保对象二级",
-        }.get(self.sfcode,
-              f'未知身份类型: {self.sfcode}')
+        return match(self.sfcode,
+                     {
+                         "011": "普通参保人员",
+                         "021": "残一级",
+                         "022": "残二级",
+                         "031": "特困一级",
+                         "051": "贫困人口一级",
+                         "061": "低保对象一级",
+                         "062": "低保对象二级",
+                     },
+                     lambda v: f'未知身份类型: {v}')
 
     @property
     def valid(self):
