@@ -1,64 +1,43 @@
-from typing import Optional, TypeVar, Generic, List, ClassVar, Union, Type, Dict, Final, Protocol
+from typing import *
 from ..httpsocket import HttpSocket, HttpRequest
-from dataclasses import dataclass, field, MISSING, fields
-from dataclasses_json import config, DataClassJsonMixin
 import re
 from .jb_internal import session_conf as conf
+from dataclasses import dataclass
+from ..jsonable import Jsonable, jfield
 
 
-def json(name: Optional[str] = None, default=MISSING, *, factory=MISSING):
-    if default != MISSING:
-        return field(metadata=config(field_name=name), default=default)
-    else:
-        return field(metadata=config(field_name=name), default_factory=factory)
-
-
-class Jsonable(DataClassJsonMixin):
-    def to_json(self):
-        return super().to_json(separators=(',', ':'))
-
-
-@dataclass
-class Parameters(Jsonable):
-    @property
-    def service_id(self):
-        return self._service_id
-
-    def __init__(self, id: str):
-        self._service_id = id
+# def dataclass(cls=None, *, id=''):
+#
+#    def wrap(cls):
+#        cls = _dataclass(cls)
+#        cls.service_id = id
+#        return cls
+#
+#    if cls is None:
+#        return wrap
+#    return wrap(cls)
 
 
 @dataclass
 class Page:
     page: int = 1
     pagesize: int = 15
-    filtering: List[Dict[str, str]] = json(factory=list)
-    sorting: List[Dict[str, str]] = json(factory=list)
-    totals: List[Dict[str, str]] = json(factory=list)
+    filtering: List[Dict[str, str]] = jfield(default_factory=list)
+    sorting: List[Dict[str, str]] = jfield(default_factory=list)
+    totals: List[Dict[str, str]] = jfield(default_factory=list)
 
 
-def params(cls=None, / , *, id='',
-           page: Optional[Page] = None, **kwargs):
+class Params:
+    def __init__(self, service_id):
+        self.service_id = service_id
 
+
+def params(cls=None, *, id=''):
     def wrap(cls):
-        cls = dataclass(cls, **kwargs)
-        cls._service_id = id
-        if page:
-            page_ = page
-            @dataclass
-            class DataPage(cls):
-                page: int = page_.page
-                pagesize: int = page_.pagesize
-                filtering: List[Dict[str, str]] = json(
-                    factory=lambda: list(page_.filtering))
-                sorting: List[Dict[str, str]] = json(
-                    factory=lambda: list(page_.sorting))
-                totals: List[Dict[str, str]] = json(
-                    factory=lambda: list(page_.totals))
-            return DataPage
+        cls.service_id = id
         return cls
 
-    if cls == None:  # called by params(id=?)
+    if cls is None:
         return wrap
     return wrap(cls)
 
@@ -70,10 +49,10 @@ class Service(Jsonable):
     sessionid: Optional[str] = None
     loginname: str = ''
     password: str = ''
-    params: Optional[Parameters] = None
-    datas: Optional[List[Parameters]] = None
+    params: Optional[Any] = None
+    datas: Optional[List[Any]] = None
 
-    def __init__(self, params: Parameters, user_id: str, password: str):
+    def __init__(self, params: Any, user_id: str, password: str):
         self.serviceid = params.service_id
         # print(self.serviceid)
         self.loginname = user_id
@@ -86,7 +65,7 @@ T = TypeVar('T')
 U = TypeVar('U', bound=Jsonable)
 
 
-class Result(Protocol, Generic[U]):
+class Result(Protocol, Generic[T]):
     rowcount: str
     page: int
     pagesize: int
@@ -95,34 +74,25 @@ class Result(Protocol, Generic[U]):
     vcode: str
     message: str
     messagedetail: str
-    datas: List[U]
+    datas: List[T]
 
     def __len__(self) -> int:
         ...
 
-    def __getitem__(self, key: int) -> U:
+    def __getitem__(self, key: int) -> T:
         ...
 
     def to_json(self) -> str:
         ...
 
     @classmethod
-    def from_json(cls: Type[T],
-                  s: str,
-                  *,
-                  encoding=None,
-                  parse_float=None,
-                  parse_int=None,
-                  parse_constant=None,
-                  infer_missing=False,
-                  **kw) -> T:
+    def from_json(cls: Type[T], s: str) -> Optional[T]:
         ...
 
 
-def result(cls: Type[U]) -> Type[Result[U]]:
-    cls = dataclass(cls)
+def result_class(cls: Type[T]) -> Type[Result[T]]:
     @dataclass
-    class _Result(Jsonable, Result):
+    class _Result(Jsonable):
         rowcount: str
         page: int
         pagesize: int
@@ -133,10 +103,10 @@ def result(cls: Type[U]) -> Type[Result[U]]:
         messagedetail: str
         datas: List[cls]  # type: ignore
 
-        def __len__(self):
+        def __len__(self) -> int:
             return len(self.datas or [])
 
-        def __getitem__(self, key: int) -> U:
+        def __getitem__(self, key: int) -> T:
             return self.datas[key]
 
     return _Result
@@ -178,23 +148,23 @@ class Session(HttpSocket):
         # print(f"{req=}")
         self.write_bytes(req)
 
-    def request_service(self, params_or_id: Union[Parameters, str]):
+    def request_service(self, params_or_id: Union[Any, str]):
         req = self.service_to_json(params_or_id)
         self.request(req)
 
-    def service_to_json(self, params_or_id: Union[Parameters, str]):
+    def service_to_json(self, params_or_id: Union[Any, str]):
         service = None
         if isinstance(params_or_id, str):  # id
-            service = Service(Parameters(params_or_id),
+            service = Service(Params(params_or_id),
                               self._user_id, self._password)
         else:  # params
             service = Service(params_or_id, self._user_id, self._password)
         return service.to_json()
 
-    def get_result(self, cls: Type[U]) -> U:
+    def get_result(self, cls: Type[U]) -> Optional[U]:
         return self.result_from_json(cls, self.read_body())
 
-    def result_from_json(self, cls: Type[U], json: str) -> U:
+    def result_from_json(self, cls: Type[U], json: str) -> Optional[U]:
         return cls.from_json(json)
 
     def login(self) -> str:
@@ -228,21 +198,23 @@ class Session(HttpSocket):
                        conf.users[id].id, conf.users[id].pwd)
 
 
+@dataclass
 @params(id='syslogin')
-class Syslogin(Parameters):
+class Syslogin:
     username: str
     passwd: str
 
 
+@dataclass
 @params(id='executeSncbxxConQ')
-class CbxxQuery(Parameters):
-    idcard: str = json(name='aac002')
+class CbxxQuery:
+    idcard: str = jfield(name='aac002')
 
 
 @dataclass
 class Sbstate:
-    cbstate: Optional[str] = json('aac008', None)  # 参保状态
-    jfstate: Optional[str] = json('aac031', None)  # 缴费状态
+    cbstate: Optional[str] = jfield('aac008', default=None)  # 参保状态
+    jfstate: Optional[str] = jfield('aac031', default=None)  # 缴费状态
 
     @property
     def cbstate_ch(self):
@@ -294,20 +266,20 @@ class Sbstate:
             return f'未知类型人员: {jfstate}, {cbstate}'
 
 
-@result
-class Cbxx(Jsonable, Sbstate):
-    pid: Optional[int] = json('aac001', None)  # 个人编号
-    idcard: Optional[str] = json('aac002', None)  # 身份证号码
-    name: str = json('aac003', '')
-    birthday: Optional[int] = json('aac006', None)
+@dataclass
+class Cbxx(Sbstate):
+    pid: Optional[int] = jfield('aac001', default=None)  # 个人编号
+    idcard: Optional[str] = jfield('aac002', default=None)  # 身份证号码
+    name: str = jfield('aac003', default='')
+    birthday: Optional[int] = jfield('aac006', default=None)
 
-    cbdate: str = json('aac049', '')  # 参保时间
-    sfcode: str = json('aac066', '')  # 参保身份编码
-    agancy: str = json('aaa129', '')  # 社保机构
-    optime: str = json('aae036', '')  # 经办时间
-    qhcode: str = json('aaf101', '')  # 行政区划编码
-    czname: str = json('aaf102', '')  # 村组名称
-    csname: str = json('aaf103', '')  # 村社区名称
+    cbdate: str = jfield('aac049', default='')  # 参保时间
+    sfcode: str = jfield('aac066', default='')  # 参保身份编码
+    agancy: str = jfield('aaa129', default='')  # 社保机构
+    optime: str = jfield('aae036', default='')  # 经办时间
+    qhcode: str = jfield('aaf101', default='')  # 行政区划编码
+    czname: str = jfield('aaf102', default='')  # 村组名称
+    csname: str = jfield('aaf103', default='')  # 村社区名称
 
     @property
     def jbclass(self):
@@ -326,8 +298,13 @@ class Cbxx(Jsonable, Sbstate):
     def valid(self):
         return self.idcard is not None
 
-@params(id='cbshQuery', page=Page(pagesize=500))
-class CbshQuery(Parameters):
+
+CbxxResult = result_class(Cbxx)
+
+
+@dataclass
+@params(id='cbshQuery')
+class CbshQuery(Page):
     aaf013: str = ""
     aaf030: str = ""
     aae011: str = ""
@@ -339,17 +316,16 @@ class CbshQuery(Parameters):
     aac003: str = ""
     sfccb: str = ""
 
-    start_date: str = json('aae015', '')
-    end_date: str = json('aae015s', '')
-    shzt: str = json('aae016', '1')
+    start_date: str = jfield('aae015', default='')
+    end_date: str = jfield('aae015s', default='')
+    shzt: str = jfield('aae016', default='1')
 
-    def __init__(self, start_date='', end_date='', shzt=''):
-        self.start_date = start_date
-        self.end_date = end_date
-        self.shzt = shzt
 
-@result
-class Cbsh(Jsonable):
-    idcard: str = json('aac002')
-    name: str = json('aac003')
-    birthday: str = json('aac006')
+@dataclass
+class Cbsh:
+    idcard: str = jfield('aac002')
+    name: str = jfield('aac003')
+    birthday: str = jfield('aac006')
+
+
+CbshResult = result_class(Cbsh)

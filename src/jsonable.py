@@ -5,19 +5,20 @@ import json
 import copy
 
 
-def jfield(alias: str = '', ignore=False, **kws):
-    return field(metadata={'alias': alias, 'ignore': ignore}, **kws)
+def jfield(name: str = '', ignore=False, **kws):
+    return field(metadata={'name': name, 'ignore': ignore}, **kws)
 
 
 A = TypeVar('A')
 
 
-class Jsonalbe:
+class Jsonable:
     def to_json(self) -> str:
         return json.dumps(_to_dict(self), separators=(',', ':'))
 
     @classmethod
     def from_json(cls: Type[A], s: str) -> Optional[A]:
+        # print(f'cls0: {cls}')
         return _from_dict(cls, json.loads(s), cls)
 
 
@@ -31,9 +32,9 @@ def _to_dict(obj: Any) -> Any:
             if meta:
                 if meta.get('ignore', False):
                     continue
-                alias = meta.get('alias', '')
-                if alias:
-                    name = alias
+                jfname = meta.get('name', '')
+                if jfname:
+                    name = jfname
             result.append((name,  _to_dict(getattr(obj, field.name, None))))
         return dict(result)
     elif isinstance(obj, Mapping):
@@ -45,6 +46,7 @@ def _to_dict(obj: Any) -> Any:
 
 
 def _from_dict(cls, dict: Any, rootcls):
+    print(f'{cls=}')
     if isinstance_safe(dict, cls):
         return dict
     elif is_dataclass(cls) and isinstance_safe(dict, Mapping):
@@ -55,9 +57,9 @@ def _from_dict(cls, dict: Any, rootcls):
             if meta:
                 if meta.get('ignore', False):
                     continue
-                alias = meta.get('alias', '')
-                if alias:
-                    name = alias
+                jfname = meta.get('name', '')
+                if jfname:
+                    name = jfname
             args[field.name] = _from_dict(
                 field.type, dict.get(name, None), rootcls)
         return cls(**args)
