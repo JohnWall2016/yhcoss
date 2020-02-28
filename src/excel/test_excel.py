@@ -1,0 +1,52 @@
+from xlrd import open_workbook
+from xlutils.copy import copy
+
+#rb = open_workbook('雨湖区城乡居民基本养老保险代发人员支付明细.xls', formatting_info=1)
+rb = open_workbook('雨湖区居保新增待遇领取人员审核名单.xls', formatting_info=1)
+
+rs = rb.sheet_by_index(0)
+#for i in (0, 10):
+#    rs.col_width(i)
+wb = copy(rb)
+ws = wb.get_sheet(0)
+#for i in range(0, 5):
+#    print(ws.col_width(i))
+##print(ws.page_setup_record)
+#ws.insert_row(4)
+#ws.copy_row(3, 4)
+#ws.update(3, 1, '长城乡1')
+#ws.update(4, 1, '长城乡2')
+#ws.insert_row(5)
+#ws.write(5, 1, '长城乡3')
+#ws.copy_row_style(3, 5)
+#
+#ws2 = wb.copy_sheet(0, '长城乡')
+#ws2.insert_row(6)
+#ws2.copy_row_style(3, 6)
+#ws2.update(6, 1, '长城乡4')
+#
+#delindex = wb.get_sheet_index_by_name('表数据_1')
+#print(delindex)
+#wb.del_sheet(delindex)
+
+#ws.update(3, 1, '长城乡1')
+#ws.row(3).set_cell_text(1, '长城乡1')
+#ws.row(4).set_cell_text(1, '长城乡2')
+#ws.update(4, 1, '长城乡2')
+#print(ws.row(3))
+#print(ws.row(4))
+#print(ws.row(3).dump())
+#print(ws.row(4).dump())
+#ws.update(3, 1, '长城乡3')
+#print(ws.row(3))
+#print(ws.row(4))
+#print(ws.row(3).dump())
+#print(ws.row(4).dump())
+#ws.update(4, 1, '长城乡4')
+#ws.write(4, 1, '长城乡2')
+#ws.write(4, 2, 'bbbbb')
+#ws.update(3, 2, 'aaaaa')
+#ws.write(4, 2, 'bbbbb')
+#wb.save('雨湖区城乡居民基本养老保险代发人员支付明细2.xls')
+wb.save('雨湖区居保新增待遇领取人员审核名单2.xls')
+#wb.save('雨湖区居保新增待遇领取人员审核名单3.xls')
