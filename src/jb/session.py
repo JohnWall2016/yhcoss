@@ -1,9 +1,9 @@
 from typing import *
-from ..httpsocket import HttpSocket, HttpRequest
+from ..base.httpsocket import HttpSocket, HttpRequest
 import re
 from .jb_internal import session_conf as conf
 from dataclasses import dataclass
-from ..jsonable import Jsonable, jfield
+from ..base.jsonable import Jsonable, jfield
 
 
 # def dataclass(cls=None, *, id=''):
@@ -63,7 +63,7 @@ class Service(Jsonable):
 
 
 T = TypeVar('T')
-U = TypeVar('U', bound=Jsonable)
+U = TypeVar('U', bound='Jsonable')
 
 
 class Result(Protocol, Generic[T]):
@@ -169,7 +169,7 @@ class Session(HttpSocket):
         return self.result_from_json(result_cls, self.read_body())
 
     def result_from_json(self, cls: Type[U], json: str) -> Optional[U]:
-        return cls.from_json(json)
+        return cls.from_json(json) # type: ignore
 
     def login(self) -> str:
         self.request_service('loadCurrentUser')
@@ -223,11 +223,7 @@ def match(value, dict: Dict, fail=lambda v: f'未知值: {v}'):
     return dict.get(value, fail(value))
 
 
-@dataclass
-class Sbstate:
-    cbstate: Optional[str] = jfield('aac008', default=None)  # 参保状态
-    jfstate: Optional[str] = jfield('aac031', default=None)  # 缴费状态
-
+class _Sbstate:
     @property
     def cbstate_ch(self):
         return match(self.cbstate,
@@ -276,6 +272,12 @@ class Sbstate:
             return '未参保'
         else:
             return f'未知类型人员: {jfstate}, {cbstate}'
+
+
+@dataclass
+class Sbstate(_Sbstate):
+    cbstate: Optional[str] = jfield('aac008', default=None)  # 参保状态
+    jfstate: Optional[str] = jfield('aac031', default=None)  # 缴费状态
 
 
 @dataclass
@@ -334,7 +336,8 @@ class CbshQuery(Page):
     def new(start_date='', end_date='', shzt='1'):
         return CbshQuery(start_date=start_date,
                          end_date=end_date,
-                         shzt=shzt)
+                         shzt=shzt,
+                         pagesize=500)
 
 
 @dataclass

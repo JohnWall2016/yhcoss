@@ -1,6 +1,6 @@
 from dataclasses import dataclass, fields, field, is_dataclass
 from typing import *
-from .types import *
+from .types import is_mapping, is_nonstr_collection, is_instanceof_generic, isinstance_safe, is_union, is_forwardref, resolve_forwardref
 import json
 import copy
 
@@ -64,7 +64,7 @@ def _from_dict(cls, dict: Any, rootcls):
                 args[field.name] = _from_dict(
                     field.type, dict.get(name, None), rootcls)
         except Exception as ex:
-            raise Exception(f'decode field "{field.name}" error: {ex}')
+            raise Exception(f'decoding field "{field.name}" error: {ex}')
         return cls(**args)
     elif is_mapping(cls) and isinstance_safe(dict, Mapping):
         k_type, v_type = cls.__args__
