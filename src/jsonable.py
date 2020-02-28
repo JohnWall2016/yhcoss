@@ -51,17 +51,20 @@ def _from_dict(cls, dict: Any, rootcls):
         return dict
     elif is_dataclass(cls) and isinstance_safe(dict, Mapping):
         args = {}
-        for field in fields(cls):
-            name = field.name
-            meta = field.metadata
-            if meta:
-                if meta.get('ignore', False):
-                    continue
-                jfname = meta.get('name', '')
-                if jfname:
-                    name = jfname
-            args[field.name] = _from_dict(
-                field.type, dict.get(name, None), rootcls)
+        try:
+            for field in fields(cls):
+                name = field.name
+                meta = field.metadata
+                if meta:
+                    if meta.get('ignore', False):
+                        continue
+                    jfname = meta.get('name', '')
+                    if jfname:
+                        name = jfname
+                args[field.name] = _from_dict(
+                    field.type, dict.get(name, None), rootcls)
+        except Exception as ex:
+            raise Exception(f'decode field "{field.name}" error: {ex}')
         return cls(**args)
     elif is_mapping(cls) and isinstance_safe(dict, Mapping):
         k_type, v_type = cls.__args__
@@ -71,10 +74,12 @@ def _from_dict(cls, dict: Any, rootcls):
     elif is_nonstr_collection(cls) and isinstance_safe(dict, Collection):
         type_ = cls.__args__[0]
         return list(_from_dict(type_, e, rootcls) for e in dict)
+    elif is_union(cls) and is_instanceof_generic(dict, cls):
+        return dict
     elif is_forwardref(cls):
         type_ = resolve_forwardref(rootcls, cls)
         if type_:
             return _from_dict(type_, dict, rootcls)
         return dict
     else:
-        return dict
+        raise Exception(f'except type: {cls}, get: {type(dict)}, {dict}')

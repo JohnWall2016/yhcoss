@@ -1,6 +1,6 @@
 import inspect
 import sys
-from typing import Optional, Mapping, Collection
+from typing import Optional, Mapping, Collection, Union
 
 
 def isinstance_safe(o, t):
@@ -37,6 +37,15 @@ def is_new_type(type_):
     return inspect.isfunction(type_) and hasattr(type_, "__supertype__")
 
 
+def _hasargs(type_, *args):
+    try:
+        res = all(arg in type_.__args__ for arg in args)
+    except AttributeError:
+        return False
+    else:
+        return res
+
+
 def is_optional(type_):
     return issubclass_safe(type_, Optional) or _hasargs(type_, type(None))
 
@@ -52,6 +61,20 @@ def is_collection(type_):
 def is_nonstr_collection(type_):
     return (issubclass_safe(get_type_origin(type_), Collection)
             and not issubclass_safe(type_, str))
+
+
+def is_union(type_):
+    return get_type_origin(type_) == Union
+
+
+def is_instanceof_generic(obj, type_):
+    try:
+        for t in type_.__args__:
+            if isinstance_safe(obj, t):
+                return True
+        return False
+    except Exception:
+        return False
 
 
 def get_type_origin(type_):
@@ -74,8 +97,10 @@ def get_type_origin(type_):
 
 typing = sys.modules.get('typing')
 
+
 def is_forwardref(obj):
     return isinstance_safe(obj, typing.ForwardRef)
+
 
 def resolve_forwardref(cls, ref):
     for base in cls.__mro__:

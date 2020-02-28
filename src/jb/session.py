@@ -27,6 +27,7 @@ class Page:
     totals: List[Dict[str, str]] = jfield(default_factory=list)
 
 
+@dataclass
 class Params:
     def __init__(self, service_id):
         self.service_id = service_id
@@ -93,7 +94,7 @@ class Result(Protocol, Generic[T]):
 def result_class(cls: Type[T]) -> Type[Result[T]]:
     @dataclass
     class _Result(Jsonable):
-        rowcount: str
+        rowcount: int
         page: int
         pagesize: int
         serviceid: str
@@ -109,7 +110,7 @@ def result_class(cls: Type[T]) -> Type[Result[T]]:
         def __getitem__(self, key: int) -> T:
             return self.datas[key]
 
-    return _Result
+    return cast(Type[Result[T]], _Result)
 
 
 class Session(HttpSocket):
@@ -213,6 +214,10 @@ class Syslogin:
 class CbxxQuery:
     idcard: str = jfield(name='aac002')
 
+    @staticmethod
+    def new(idcard=''):
+        return CbxxQuery(idcard=idcard)
+
 
 def match(value, dict: Dict, fail=lambda v: f'未知值: {v}'):
     return dict.get(value, fail(value))
@@ -280,13 +285,13 @@ class Cbxx(Sbstate):
     name: str = jfield('aac003', default='')
     birthday: Optional[int] = jfield('aac006', default=None)
 
-    cbdate: str = jfield('aac049', default='')  # 参保时间
+    cbdate: Optional[str] = jfield('aac049', default='')  # 参保时间
     sfcode: str = jfield('aac066', default='')  # 参保身份编码
     agancy: str = jfield('aaa129', default='')  # 社保机构
     optime: str = jfield('aae036', default='')  # 经办时间
-    qhcode: str = jfield('aaf101', default='')  # 行政区划编码
+    qhcode: Optional[str] = jfield('aaf101', default='')  # 行政区划编码
     czname: str = jfield('aaf102', default='')  # 村组名称
-    csname: str = jfield('aaf103', default='')  # 村社区名称
+    csname: Optional[str] = jfield('aaf103', default='')  # 村社区名称
 
     @property
     def jbclass(self):
@@ -325,9 +330,15 @@ class CbshQuery(Page):
     end_date: str = jfield('aae015s', default='')
     shzt: str = jfield('aae016', default='1')
 
+    @staticmethod
+    def new(start_date='', end_date='', shzt='1'):
+        return CbshQuery(start_date=start_date,
+                         end_date=end_date,
+                         shzt=shzt)
+
 
 @dataclass
 class Cbsh:
     idcard: str = jfield('aac002')
     name: str = jfield('aac003')
-    birthday: str = jfield('aac006')
+    birthday: int = jfield('aac006')
