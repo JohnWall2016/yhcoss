@@ -1,6 +1,6 @@
 from typing import *
 from dataclasses import dataclass
-from ..jsonable import *
+from ..base.jsonable import *
 
 def test1():
     @dataclass
@@ -29,7 +29,10 @@ def test2():
     class Result(Protocol, Generic[T]):
         message: str
         datas: List[T]
-        def __len__(self):
+
+        def __init__(self, message: str, datas: List[T]) -> None:
+            ...
+        def __len__(self) -> int:
             ...
         def __getitem__(self, key: int) -> T:
             ...
@@ -43,9 +46,9 @@ def test2():
         @dataclass
         class _Result(Jsonable):
             message: str
-            datas: List[cls] # type: ignore
+            datas: List[cls]
 
-            def __len__(self):
+            def __len__(self) -> int:
                 return len(self.datas or [])
 
             def __getitem__(self, key: int) -> T:
@@ -58,16 +61,10 @@ def test2():
 
     ItemResult = result_class(Item)
 
-    # r = Result[Item]('abc', [Item('item1'), Item('item2')])
-    # j = r.to_json()
-    # print(j)
-    # r2 = Result[Item].from_json(j)
-    # print(r2)
-
-    r = ItemResult('abc', [Item('item1'), Item('item2')])
+    r = ItemResult[Item]('abc', [Item('item1'), Item('item2')])
     j = r.to_json()
     print(j)
-    r2 = ItemResult.from_json(j)
+    r2 = ItemResult[Item].from_json(j)
     print(r2)
     
 

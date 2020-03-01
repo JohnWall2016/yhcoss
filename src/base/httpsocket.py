@@ -156,7 +156,7 @@ class HttpSocket:
 
         return buffer.decode(self._encoding)
 
-    def get_http(self, path: str, encoding='utf-8') -> str:
+    def get_http(self, path: str, encoding:str='utf-8') -> str:
         request = HttpRequest(path, encoding=encoding)
         request.add_header("Host", self.url) \
             .add_header("Connection", "keep-alive") \

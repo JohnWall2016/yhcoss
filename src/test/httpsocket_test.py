@@ -1,4 +1,4 @@
-from ..httpsocket import HttpHeader, HttpSocket
+from ..base.httpsocket import HttpHeader, HttpSocket
 
 header = HttpHeader()
 print(header._header)
