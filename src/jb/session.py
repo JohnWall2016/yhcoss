@@ -66,7 +66,7 @@ T = TypeVar('T')
 U = TypeVar('U', bound='Jsonable')
 
 
-class Result(Protocol, Generic[T]):
+class Result(Protocol, Jsonable, Generic[T]):
     rowcount: str
     page: int
     pagesize: int
@@ -102,7 +102,7 @@ def result_class(cls: Type[T]) -> Type[Result[T]]:
         vcode: str
         message: str
         messagedetail: str
-        datas: List[cls]  # type: ignore
+        datas: List[cls]
 
         def __len__(self) -> int:
             return len(self.datas or [])
@@ -114,7 +114,7 @@ def result_class(cls: Type[T]) -> Type[Result[T]]:
 
 
 class Session(HttpSocket):
-    _result_classes: Dict = {}
+    _result_classes: Dict[Type[T], Type[Result[T]]] = {}
 
     def __init__(self, host: str, port: int,
                  user_id: str, password: str):
@@ -223,7 +223,10 @@ def match(value, dict: Dict, fail=lambda v: f'未知值: {v}'):
     return dict.get(value, fail(value))
 
 
-class _Sbstate:
+class _Sbstate(Any):
+    #cbstate: Optional[str] = None
+    #jfstate: Optional[str] = None
+
     @property
     def cbstate_ch(self):
         return match(self.cbstate,

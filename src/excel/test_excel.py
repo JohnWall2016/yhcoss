@@ -1,5 +1,5 @@
-from xlrd import open_workbook
-from xlutils.copy import copy
+from .xlrd import open_workbook
+from .xlutils.copy import copy
 
 #rb = open_workbook('雨湖区城乡居民基本养老保险代发人员支付明细.xls', formatting_info=1)
 rb = open_workbook('雨湖区居保新增待遇领取人员审核名单.xls', formatting_info=1)

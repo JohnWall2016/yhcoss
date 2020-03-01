@@ -1,6 +1,6 @@
 import inspect
 import sys
-from typing import Optional, Mapping, Collection, Union
+from typing import Optional, Mapping, Collection, Union, Any, TypeVar
 
 
 def isinstance_safe(o, t):
@@ -45,9 +45,10 @@ def _hasargs(type_, *args):
     else:
         return res
 
+T = TypeVar('T')
 
 def is_optional(type_):
-    return issubclass_safe(type_, Optional) or _hasargs(type_, type(None))
+    return issubclass_safe(type_, Optional[T]) or _hasargs(type_, type(None))
 
 
 def is_mapping(type_):
@@ -95,7 +96,7 @@ def get_type_origin(type_):
     return origin
 
 
-typing = sys.modules.get('typing')
+typing: Any = sys.modules.get('typing')
 
 
 def is_forwardref(obj):

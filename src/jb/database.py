@@ -3,13 +3,14 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import *
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session as DBSession
+from sqlalchemy.orm.session import Session as _DBSession
+from sqlalchemy.orm.query import Query as _DBQuery
 
 from .jb_internal import mysql_engine_jzfp2020
 
 engine = create_engine(mysql_engine_jzfp2020)
 
-Base = declarative_base()
+Base: Any = declarative_base()
 
 
 class FPData:
@@ -40,9 +41,19 @@ class FPData:
     jbcbqk_date = Column('jbcbqkdate', String)  # 居保参保情况日期
 
 
-class FPHistoryData(FPData, Base):
+class FPHistoryData(FPData):
     __tablename__ = 'fphistorydata'
 
+T = TypeVar('T')
+
+class Query(Generic[T], _DBQuery):
+    def filter(self, *criterion) -> 'Query[T]': ...
+    def filter_by(self, **kwargs) -> 'Query[T]': ...
+    def first(self) -> Optional[T]: ...
+
+class DBSession(_DBSession):
+    def query(self, *entities, **kwargs) -> Query: ...
+    def query(self, entity1: Type[T], **kwargs) -> Query[T]: ...
 
 _Session = sessionmaker(bind=engine)
 

@@ -4,8 +4,9 @@
 # http://www.opensource.org/licenses/mit-license.html
 # See license.txt for more details.
 
-from xlutils.filter import process,XLRDReader,XLWTWriter
+from .filter import process,XLRDReader,XLWTWriter
 from ..xlwt.Workbook import Workbook
+from ..xlrd import Book
 
 def copy(wb: Book) -> Workbook:
     """

@@ -51,9 +51,10 @@ def _from_dict(cls, dict: Any, rootcls):
         return dict
     elif is_dataclass(cls) and isinstance_safe(dict, Mapping):
         args = {}
+        field_name = 'Unknown'
         try:
             for field in fields(cls):
-                name = field.name
+                field_name = name = field.name
                 meta = field.metadata
                 if meta:
                     if meta.get('ignore', False):
@@ -64,7 +65,7 @@ def _from_dict(cls, dict: Any, rootcls):
                 args[field.name] = _from_dict(
                     field.type, dict.get(name, None), rootcls)
         except Exception as ex:
-            raise Exception(f'decoding field "{field.name}" error: {ex}')
+            raise Exception(f'decoding field "{field_name}" error: {ex}')
         return cls(**args)
     elif is_mapping(cls) and isinstance_safe(dict, Mapping):
         k_type, v_type = cls.__args__

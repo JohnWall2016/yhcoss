@@ -7,7 +7,7 @@ from ..jb import database as db
 @click.command()
 @click.argument('start_date', required=True, metavar='起始审核时间')
 @click.argument('end_date', required=False, metavar='结束审核时间')
-def audit(start_date, end_date):
+def audit(start_date:str='', end_date:str=''):
     '''
     特殊参保人员身份信息变更导出程序
 
