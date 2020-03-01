@@ -11,6 +11,7 @@ autopep8 = "*"
 click = "*"
 sqlalchemy = "*"
 mysql-connector-python = "*"
+lxml = "*"
 
 [requires]
 python_version = "3.8"
