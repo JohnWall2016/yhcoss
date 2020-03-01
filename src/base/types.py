@@ -21,7 +21,7 @@ def issubclass_safe(cls, classinfo):
                 else False)
 
 
-def is_new_type_subclass_safe(cls, classinfo):
+def is_new_type_subclass_safe(cls, classinfo) -> bool:
     super_type = getattr(cls, "__supertype__", None)
 
     if super_type:

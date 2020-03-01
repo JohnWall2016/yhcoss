@@ -29,11 +29,11 @@ class Page:
 
 @dataclass
 class Params:
-    def __init__(self, service_id):
+    def __init__(self, service_id: str):
         self.service_id = service_id
 
 
-def params(cls=None, *, id=''):
+def params(cls=None, *, id: str = ''):
     def wrap(cls):
         cls.service_id = id
         return cls
@@ -53,13 +53,14 @@ class Service(Jsonable):
     params: Optional[Any] = None
     datas: Optional[List[Any]] = None
 
-    def __init__(self, params: Any, user_id: str, password: str):
-        self.serviceid = params.service_id
-        # print(self.serviceid)
-        self.loginname = user_id
-        self.password = password
-        self.params = params
-        self.datas = [params]
+    @staticmethod
+    def new(params: Any, user_id: str, password: str):
+        return Service(
+            serviceid=params.service_id,
+            loginname=user_id,
+            password=password,
+            params=params,
+            datas=[params])
 
 
 T = TypeVar('T')
@@ -158,10 +159,10 @@ class Session(HttpSocket):
     def service_to_json(self, params_or_id: Union[Any, str]):
         service = None
         if isinstance(params_or_id, str):  # id
-            service = Service(Params(params_or_id),
-                              self._user_id, self._password)
+            service = Service.new(Params(params_or_id),
+                                  self._user_id, self._password)
         else:  # params
-            service = Service(params_or_id, self._user_id, self._password)
+            service = Service.new(params_or_id, self._user_id, self._password)
         return service.to_json()
 
     def get_result(self, cls: Type[T]) -> Optional[Result[T]]:
@@ -169,19 +170,19 @@ class Session(HttpSocket):
         return self.result_from_json(result_cls, self.read_body())
 
     def result_from_json(self, cls: Type[U], json: str) -> Optional[U]:
-        return cls.from_json(json) # type: ignore
+        return cls.from_json(json)
 
     def login(self) -> str:
         self.request_service('loadCurrentUser')
         header = self.read_header()
         cookies = header.get("set-cookie", [])
-        for cookie in cookies:  # type: ignore
+        for cookie in cookies:
             m = re.search(r'([^=]+?)=(.+?);', cookie)
             if m:
                 self._cookies[m.group(1)] = m.group(2)
         self.read_body(header)
         self.request_service(
-            Syslogin(self._user_id, self._password))  # type: ignore
+            Syslogin(self._user_id, self._password))
         return self.read_body()
 
     def logout(self) -> str:
@@ -336,7 +337,7 @@ class CbshQuery(Page):
     shzt: str = jfield('aae016', default='1')
 
     @staticmethod
-    def new(start_date='', end_date='', shzt='1'):
+    def new(start_date: str = '', end_date: str = '', shzt: str = '1'):
         return CbshQuery(start_date=start_date,
                          end_date=end_date,
                          shzt=shzt,
