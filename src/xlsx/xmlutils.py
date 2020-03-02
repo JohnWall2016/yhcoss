@@ -31,8 +31,17 @@ class XmlElement:
         return cast(NSMap, self._element.nsmap)
 
     @property
-    def tag(self):
-        return self._element.tag
+    def tag(self) -> XmlName:
+        tag = self._element.tag
+        return tag if isinstance(tag, XmlName) else XmlName(tag)
+
+    @property
+    def text(self):
+        return self._element.text
+
+    @text.setter
+    def text(self, value: Optional[AnyStr]):
+        self._element.text = value
 
     def find(self, child_path: str, namespace: OptionalNamespace = None) -> Optional['XmlElement']:
         elem = self._element.find(child_path, namespace)
@@ -55,9 +64,10 @@ class XmlElement:
         else:
             self._element.remove(index_or_elem._element)
 
-    def remove_attrib(self, attr_name: Union[AnyStr, XmlName]):
-        if self.attrib.has_key(attr_name):
-            del self.attrib[attr_name]
+    def remove_attrib(self, *attr_names: Union[AnyStr, XmlName]):
+        for name in attr_names or []:
+            if self.attrib.has_key(name):
+                del self.attrib[name]
 
     def insert(self, index: int, element: 'XmlElement'):
         self._element.insert(index, element._element)

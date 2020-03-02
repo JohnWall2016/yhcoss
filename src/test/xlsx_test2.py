@@ -9,12 +9,17 @@ def test():
     print(f'{sheets=}')
 
     for c in wb:
-        print(f'{c.tag=}')
+        print(f'{type(c.tag)=} {c.tag=}')
 
     print(f'{wb.nsmap=}')
     sheets = wb.find('sheets', wb.nsmap)
     print(f'{sheets=}')
     print(f'{sheets.tostring(encoding="unicode")=}')
+
+    print(sheets.tag)
+    print(type(sheets.tag))
+    print(sheets.tag.localname)
+    print(sheets.tag.namespace)
 
     print(sheets.nsmap)
     print(sheets.attrib)
@@ -36,6 +41,8 @@ def test_xmlelement():
     elem.append(subelem)
     subelem.attrib['sheetId'] = '1'
     subelem.attrib[XmlName(elem.nsmap['r'], 'id')] = 'rId1'
+    xml_ns = 'http://www.w3.org/XML/1998/namespace'
+    subelem.attrib[XmlName(xml_ns, 'space')] = 'preserve'
 
     print(elem)
     print(subelem.get(XmlName(elem.nsmap['r'], 'id')))
@@ -44,6 +51,7 @@ def test_xmlelement():
     print(XmlName(None, 'id'))
     print(XmlName('abc', 'id'))
     
+    subelem.text = 'abcedfg'
     print(subelem)
     subelem.remove_attrib('sheetId')
     subelem.remove_attrib('id')
