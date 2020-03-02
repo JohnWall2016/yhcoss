@@ -45,6 +45,7 @@ def test_xmlelement():
     print(XmlName('abc', 'id'))
     
     print(subelem)
+    subelem.remove_attrib('sheetId')
     subelem.remove_attrib('id')
     print(subelem)
     subelem.remove_attrib(XmlName(subelem.nsmap['r'], 'id'))

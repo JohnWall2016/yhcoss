@@ -14,7 +14,7 @@ class ContentTypes(XmlElement):
                               })
 
     def find_by_part_name(self, part_name: str) -> Optional[XmlElement]:
-        return self.find_by_attr(PartName=part_name)
+        return self.find_by_attr('PartName', part_name)
 
 
     
