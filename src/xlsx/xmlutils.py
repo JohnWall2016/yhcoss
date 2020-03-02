@@ -1,4 +1,4 @@
-from typing import Iterator, Optional, cast, Union, Dict, Mapping, Any
+from typing import Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
 from lxml.etree import _Element, tostring, Element
 from lxml.etree import _Attrib as XmlAttribute, QName as XmlName
 
@@ -7,6 +7,8 @@ NSMap = Dict[Union[str, None], str]
 DictStr = Dict[str, str]
 OptionalNamespace = Optional[Mapping[Optional[str], Any]]
 AnyStr = Union[str, bytes]
+
+T = TypeVar('T')
 
 class XmlElement:
     def __init__(self, element: Union[_Element, 'XmlElement']):
@@ -38,30 +40,24 @@ class XmlElement:
             return XmlElement(elem)
         return None
 
-    def find_by_attr(self, **attrs: str) -> Optional['XmlElement']:
+    def find_by_attr(self, name: Union[AnyStr, XmlName], value: AnyStr) -> Optional['XmlElement']:
         for child in self:
-            for k, v in attrs:
-                if child.attrib.get(k) == v:
-                    return child
+            if child.get(name) == value:
+                return child
         return None
 
-    def get(self, attr_name: AnyStr, namespace: OptionalNamespace = None) -> Optional[AnyStr]:
-        value = self._element.get(attr_name)
-        if value:
-            return value
-        if namespace:
-            for ns in namespace.values():
-                value = self._element.get(XmlName(ns, attr_name).text)
-                if value:
-                    return value
-        return None
-
+    def get(self, attr_name: Union[AnyStr, XmlName], default: Optional[AnyStr] = None) -> Optional[AnyStr]:
+        return self._element.get(attr_name, default)
 
     def remove(self, index_or_elem: Union[int, 'XmlElement']):
         if isinstance(index_or_elem, int):
             del self._element[index_or_elem]
         else:
             self._element.remove(index_or_elem._element)
+
+    def remove_attrib(self, attr_name: Union[AnyStr, XmlName]):
+        if self.attrib.has_key(attr_name):
+            del self.attrib[attr_name]
 
     def insert(self, index: int, element: 'XmlElement'):
         self._element.insert(index, element._element)
