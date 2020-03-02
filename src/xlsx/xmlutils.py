@@ -1,14 +1,24 @@
 from typing import Iterator, Optional, cast, Union, Dict, Mapping, Any
-from lxml.etree import _Element, tostring
+from lxml.etree import _Element, tostring, Element
 from lxml.etree import _Attrib as XmlAttribute, QName as XmlName
 
+
 NSMap = Dict[Union[str, None], str]
+DictStr = Dict[str, str]
 OptionalNamespace = Optional[Mapping[Optional[str], Any]]
 AnyStr = Union[str, bytes]
 
 class XmlElement:
-    def __init__(self, element: _Element):
-        self._element = element
+    def __init__(self, element: Union[_Element, 'XmlElement']):
+        if isinstance(element, XmlElement):
+            self._element = element._element
+        else:
+            self._element = element
+
+    @staticmethod
+    def new(tag: str, attrib: Optional[DictStr] = None, 
+            nsmap: Optional[NSMap] = None) -> 'XmlElement':
+        return XmlElement(Element(tag, attrib=attrib, nsmap=nsmap))
 
     @property
     def attrib(self) -> XmlAttribute:
@@ -26,6 +36,13 @@ class XmlElement:
         elem = self._element.find(child_path, namespace)
         if elem is not None:
             return XmlElement(elem)
+        return None
+
+    def find_by_attr(self, **attrs: str) -> Optional['XmlElement']:
+        for child in self:
+            for k, v in attrs:
+                if child.attrib.get(k) == v:
+                    return child
         return None
 
     def get(self, attr_name: AnyStr, namespace: OptionalNamespace = None) -> Optional[AnyStr]:
@@ -70,3 +87,4 @@ class XmlElement:
 
     def __str__(self) -> str:
         return cast(str, tostring(self._element, encoding='unicode', pretty_print=False))
+

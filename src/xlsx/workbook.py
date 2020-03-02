@@ -17,4 +17,8 @@ class Workbook(XmlElement):
                 return ElementTree(XML(archive.read(path))).getroot()
 
             wb = Workbook(get_xml('xl/workbook.xml'))
+            wb._init(get_xml)
             return wb
+
+    def _init(self, get_xml: Callable[[str], _Element]):
+        pass
