@@ -1,6 +1,6 @@
-from typing import Optional, Union, List
+from typing import Dict, Optional, Union, List
 from .style_sheet import StyleSheet
-from .xmlutils import XmlElement, AnyStr, try_parse, to_str, to_optstr
+from .xmlutils import XmlElement, AnyStr, try_parse, to_str, to_optstr, try_parse_default
 
 
 class Color:
@@ -65,12 +65,12 @@ class GradientFill(Fill):
 
 
 class Side:
-    def __init__(self, style: Optional[str] = None,
+    def __init__(self, style: Optional[AnyStr] = None,
                  color: Optional[Color] = None, direction: Optional[str] = None):
         self.style = style
         self.color = color
         self.direction = direction
-        
+
     @property
     def empty(self) -> bool:
         return not (self.style or self.color or self.direction)
@@ -88,7 +88,6 @@ class Border:
 
 
 class Style:
-
     def __init__(self, sheet: StyleSheet, id: int, xf: XmlElement,
                  font: XmlElement, fill: XmlElement, border: XmlElement):
         self._sheet = sheet
@@ -102,7 +101,8 @@ class Style:
     def id(self):
         return self._id
 
-    def _get_color(self, elem: Optional[XmlElement], localname: str) -> Optional[Color]:
+    @staticmethod
+    def _get_color(elem: Optional[XmlElement], localname: str) -> Optional[Color]:
         if elem is None:
             return None
         child = elem.find_by_localname(localname)
@@ -110,7 +110,8 @@ class Style:
             return Color.new(child)
         return None
 
-    def _set_color(self, elem: XmlElement, localname: str,
+    @staticmethod
+    def _set_color(elem: XmlElement, localname: str,
                    color: Optional[Union[str, int, Color]]):
         clr = None
         if isinstance(color, str):
@@ -174,7 +175,7 @@ class Style:
         return self._font.get_child_attrib_value('vertAlign', 'val')
 
     def _set_font_vertical_alignment(self, value: Optional[str]):
-        self._font.put_child_attrib('vertAlign', {'val':value})
+        self._font.put_child_attrib('vertAlign', {'val': value})
         self._font.remove_if_empty('vertAlign')
 
     @property
@@ -192,7 +193,7 @@ class Style:
     @superscript.setter
     def superscript(self, value: bool):
         self._set_font_vertical_alignment('superscript' if value else None)
-    
+
     @property
     def font_size(self) -> Optional[int]:
         return try_parse(int, self._font.get_child_attrib_value('sz', 'val'))
@@ -225,7 +226,7 @@ class Style:
 
     @horizontal_alignment.setter
     def horizontal_alignment(self, value: Optional[str]):
-        self._xf.put_child_attrib('alignment', {'horizontal':value})
+        self._xf.put_child_attrib('alignment', {'horizontal': value})
         self._xf.remove_if_empty('alignment')
 
     @property
@@ -234,9 +235,8 @@ class Style:
 
     @vertical_alignment.setter
     def vertical_alignment(self, value: Optional[str]):
-        self._xf.put_child_attrib('alignment', {'vertical':value})
+        self._xf.put_child_attrib('alignment', {'vertical': value})
         self._xf.remove_if_empty('alignment')
-
 
     @property
     def indent(self) -> Optional[AnyStr]:
@@ -244,7 +244,7 @@ class Style:
 
     @indent.setter
     def indent(self, value: Optional[str]):
-        self._xf.put_child_attrib('alignment', {'indent':value})
+        self._xf.put_child_attrib('alignment', {'indent': value})
         self._xf.remove_if_empty('alignment')
 
     @property
@@ -253,7 +253,8 @@ class Style:
 
     @justify_lastline.setter
     def justify_lastline(self, value: bool):
-        self._xf.put_child_attrib('alignment', {'justifyLastLine': '1' if value else None})
+        self._xf.put_child_attrib(
+            'alignment', {'justifyLastLine': '1' if value else None})
         self._xf.remove_if_empty('alignment')
 
     @property
@@ -262,7 +263,8 @@ class Style:
 
     @wrap_text.setter
     def wrap_text(self, value: bool):
-        self._xf.put_child_attrib('alignment', {'wrapText': '1' if value else None})
+        self._xf.put_child_attrib(
+            'alignment', {'wrapText': '1' if value else None})
         self._xf.remove_if_empty('alignment')
 
     @property
@@ -271,7 +273,8 @@ class Style:
 
     @shrink_to_fit.setter
     def shrink_to_fit(self, value: bool):
-        self._xf.put_child_attrib('alignment', {'shrinkToFit': '1' if value else None})
+        self._xf.put_child_attrib(
+            'alignment', {'shrinkToFit': '1' if value else None})
         self._xf.remove_if_empty('alignment')
 
     @property
@@ -297,7 +300,8 @@ class Style:
         return try_parse(float, self._xf.get_child_attrib_value('alignment', 'textRotation'))
 
     def _set_text_rotation(self, value: Optional[float]):
-        self._xf.put_child_attrib('alignment', {'textRotation':f'{value}' if value else None})
+        self._xf.put_child_attrib(
+            'alignment', {'textRotation': f'{value}' if value else None})
         self._xf.remove_if_empty('alignment')
 
     @property
@@ -354,17 +358,18 @@ class Style:
 
     @vertical_text.setter
     def vertical_text(self, value: bool):
-        self._set_text_rotation(255 if value else None)    
+        self._set_text_rotation(255 if value else None)
 
     @property
     def fill(self) -> Optional[Fill]:
         pattern_fill = self._fill.find_by_localname('patternFill')
         gradient_fill = self._fill.find_by_localname('gradientFill')
-        pattern_type = pattern_fill.get_attrib_value('patternType') if pattern_fill else None
+        pattern_type = pattern_fill.get_attrib_value(
+            'patternType') if pattern_fill else None
         if pattern_type == 'solid':
             return SolidFile(self._get_color(pattern_fill, 'fgColor'))
         elif pattern_type:
-            return PatternFill(pattern_type, 
+            return PatternFill(pattern_type,
                                self._get_color(pattern_fill, 'fgColor'),
                                self._get_color(pattern_fill, 'bgColor'))
         elif gradient_fill:
@@ -389,11 +394,13 @@ class Style:
     def fill(self, value: Fill):
         self._fill.clear()
         if isinstance(value, SolidFile):
-            pattern_fill = XmlElement.new('patternFill', {'patternType': 'solid'})
+            pattern_fill = XmlElement.new(
+                'patternFill', {'patternType': 'solid'})
             self._set_color(pattern_fill, 'fgColor', value.color)
             self._fill.append(pattern_fill)
         elif isinstance(value, PatternFill):
-            pattern_fill = XmlElement.new('patternFill', {'patternType': value.type})
+            pattern_fill = XmlElement.new(
+                'patternFill', {'patternType': value.type})
             self._set_color(pattern_fill, 'fgColor', value.foreground)
             self._set_color(pattern_fill, 'bgColor', value.background)
             self._fill.append(pattern_fill)
@@ -408,11 +415,149 @@ class Style:
                 'degree': value.angle
             })
             for stop in value.stops:
-                elem = XmlElement.new('stop', {'position':stop.position})
+                elem = XmlElement.new('stop', {'position': stop.position})
                 self._set_color(elem, 'color', stop.color)
                 gradient_fill.append(elem)
             self._fill.append(gradient_fill)
 
+    def _get_border(self) -> Border:
+        border = Border()
+        for child in self._border:
+            def get_side() -> Side:
+                nonlocal child
+                return Side(child.get_attrib_value('style'),
+                            self._get_color(child, 'color'))
+            localname = child.tag.localname
+            if localname == 'left':
+                border.left = get_side()
+            elif localname == 'right':
+                border.right = get_side()
+            elif localname == 'top':
+                border.top = get_side()
+            elif localname == 'bottom':
+                border.bottom = get_side()
+            elif localname == 'diagonal':
+                up = self._border.get_attrib_value('diagonalUp')
+                down = self._border.get_attrib_value('diagonalDown')
+                direction = None
+                if up and down:
+                    direction = 'both'
+                elif up:
+                    direction = 'up'
+                elif down:
+                    direction = 'down'
+                border.diagonal = get_side()
+                border.diagonal.direction = direction
+        return border
+
+    @staticmethod
+    def _get_diagonal(side_or_direction: Optional[Union[Side, str]], *directions: str) -> Optional[str]:
+        if side_or_direction is None:
+            return None
+        for direction in directions:
+            if isinstance(side_or_direction, str):
+                if side_or_direction == direction:
+                    return '1'
+            elif side_or_direction.direction == direction:
+                return '1'
+        return None
+
+    def _set_border(self, border: Border):
+        border = border or Border()
+        for name, side in {'left': border.left,
+                           'right': border.right,
+                           'top': border.top,
+                           'bottom': border.bottom,
+                           'diagonal': border.diagonal}.items():
+            child = self._border.find_by_localname(name)
+            if child is None:
+                return
+            child.put_attrib({'style': side.style if side else None})
+            self._set_color(child, 'color', side.color if side else None)
+            if name == 'diagonal':
+                child.put_attrib({
+                    'diagonalUp': self._get_diagonal(side, 'up', 'both'),
+                    'diagonalDown': self._get_diagonal(side, 'down', 'both'),
+                })
+
+    @property
+    def border(self) -> Border:
+        return self._get_border()
+
+    @border.setter
+    def border(self, border: Border):
+        self._set_border(border)
+
+    @property
+    def border_color(self) -> Dict[str, Optional[Color]]:
+        border = self._get_border()
+        return {k: v.color if v else None
+                for k, v in {'left': border.left,
+                             'right': border.right,
+                             'top': border.top,
+                             'bottom': border.bottom,
+                             'diagonal': border.diagonal}.items()}
+
+    @border_color.setter
+    def border_color(self, color: Union[Color, Dict[str, Optional[Color]]]):
+        if isinstance(color, Color):
+            color = {'left': color,
+                     'right': color,
+                     'top': color,
+                     'bottom': color,
+                     'diagonal': color}
+        for n, c in color.items():
+            child = self._border.find_by_localname(n)
+            if child:
+                self._set_color(child, 'color', c)
+
+    @property
+    def border_style(self) -> Dict[str, Optional[AnyStr]]:
+        border = self._get_border()
+        return {k: v.style if v else None
+                for k, v in {'left': border.left,
+                             'right': border.right,
+                             'top': border.top,
+                             'bottom': border.bottom,
+                             'diagonal': border.diagonal}.items()}
+
+    @border_color.setter
+    def border_color(self, style: Union[str, Dict[str, Optional[AnyStr]]]):
+        if isinstance(style, str):
+            style = {'left': style,
+                     'right': style,
+                     'top': style,
+                     'bottom': style,
+                     'diagonal': style}
+        for n, s in style.items():
+            child = self._border.find_by_localname(n)
+            if child:
+                child.put_attrib({'style': s})
+
+    @property
+    def diagonal_border_direction(self) -> Optional[str]:
+        return self._get_border().diagonal.direction
+
+    @diagonal_border_direction.setter
+    def diagonal_border_direction(self, direction: Optional[str]):
+        child = self._border.find_by_localname('diagonal')
+        if child:
+            child.put_attrib({
+                'diagonalUp': self._get_diagonal(direction, 'up', 'both'),
+                'diagonalDown': self._get_diagonal(direction, 'down', 'both'),
+            })
+
+    @property
+    def number_format(self) -> AnyStr:
+        num_fmt_id = self._xf.get_attrib_value('numFmtId')
+        id = try_parse_default(int, num_fmt_id, 0)
+        return self._sheet.get_number_format_code(id)
+
+    @number_format.setter
+    def number_format(self, format_code: str):
+        self._xf.put_attrib({
+            'numFmtId': f'{self._sheet.get_number_format_id(format_code)}'
+        })
 
 
 colors = [

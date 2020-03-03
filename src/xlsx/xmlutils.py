@@ -1,4 +1,4 @@
-from typing import Callable, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
+from typing import Callable, Collection, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
 from lxml.etree import _Element, tostring, Element
 from lxml.etree import _Attrib as XmlAttribute, QName as XmlName
 
@@ -143,15 +143,21 @@ class XmlElement:
         return cast(str, tostring(self._element, encoding='unicode', pretty_print=False))
 
 
+NoneElement = XmlElement.new('__NONE__')
+
 
 T = TypeVar('T')
 U = TypeVar('U')
+V = TypeVar('V')
 
-def try_parse(type_: Callable[[T], U], value: T, default: U = None):
+def try_parse_default(type_: Callable[[T], U], value: T, default: V):
     try:
         return type_(value)
     except:
         return default
+
+def try_parse(type_: Callable[[T], U], value: T):
+    return try_parse_default(type_, value, None)
 
 def to_str(anystr: Union[AnyStr, int], encoding: str = 'utf-8') -> str:
     if isinstance(anystr, str):
