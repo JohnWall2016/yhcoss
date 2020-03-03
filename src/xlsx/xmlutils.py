@@ -107,6 +107,12 @@ class XmlElement:
     def append(self, element: 'XmlElement'):
         self._element.append(element._element)
 
+    def get_child_attrib_value(self, localname: str, attr: str) -> Optional[AnyStr]:
+        c = self.find_by_localname(localname)
+        if c:
+            return c.attrib.get(attr)
+        return None
+
     def append_if_not_found(self, localname: str) -> 'XmlElement':
         elem = self.find_by_localname(localname)
         if elem:
