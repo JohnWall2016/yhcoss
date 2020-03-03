@@ -1,5 +1,5 @@
 from typing import Optional
-from .xmlutils import XmlElement, try_parse
+from .xmlutils import XmlElement, try_parse, try_parse_default
 from lxml.etree import _Element
 
 
@@ -12,17 +12,17 @@ class Relationships(XmlElement):
                                         nsmap={None: 'http://schemas.openxmlformats.org/package/2006/relationships'}))
         self._next_id = 1
         for child in self:
-            id = try_parse(int, child.attrib.get('Id')[3, ], None)
+            id = try_parse_default(int, child.attrib.get('Id')[3, ], None)
             if id and id >= self._next_id:
                 self._next_id = id + 1
 
     def add(self, type_: str, target: str, targetMode: Optional[str] = None) -> XmlElement:
         elem = XmlElement.new('Relationship',
-            {
-                'Id': f'rId{self._next_id}',
-                'Type': f'{self.relationshipSchemaPrefix}{type_}',
-                'Target': target
-            })
+                              {
+                                  'Id': f'rId{self._next_id}',
+                                  'Type': f'{self.relationshipSchemaPrefix}{type_}',
+                                  'Target': target
+                              })
         if targetMode:
             elem.attrib['TargetMode'] = targetMode
         self._next_id += 1
@@ -33,4 +33,3 @@ class Relationships(XmlElement):
 
     def find_by_type(self, type_: str):
         return self.find_by_attrib('Type', f'{self.relationshipSchemaPrefix}{type_}')
-

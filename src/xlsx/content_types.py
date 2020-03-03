@@ -2,7 +2,6 @@ from typing import Optional
 from .xmlutils import XmlElement, _Element
 
 class ContentTypes(XmlElement):
-
     def __init__(self, element: _Element):
         super().__init__(element)
 
@@ -14,7 +13,7 @@ class ContentTypes(XmlElement):
                               })
 
     def find_by_part_name(self, part_name: str) -> Optional[XmlElement]:
-        return self.find_by_attr('PartName', part_name)
+        return self.find_by_attrib('PartName', part_name)
 
 
     

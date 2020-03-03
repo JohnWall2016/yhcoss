@@ -1,5 +1,5 @@
 from typing import List, Optional, Union, Dict
-from .xmlutils import XmlElement, AnyStr, XmlName
+from .xmlutils import XmlElement, AnyStr, XmlName, to_optstr
 from lxml.etree import _Element
 
 
@@ -14,9 +14,8 @@ class RichText(XmlElement):
             if c.tag.localname == 'r':
                 for cc in c:
                     if cc.tag.localname == 't':
-                        _str += cc.text or ''
+                        _str += to_optstr(cc.text) or ''
         return _str
-
 
     @property
     def string(self):
@@ -47,7 +46,7 @@ class Relationships(XmlElement):
                     self._idxdict[string] = index
                     index += 1
                 elif content.tag.localname == 'r':
-                    r = RichText(content)
+                    r = RichText(child)
                     self._strlist.append(r)
                     self._idxdict[r] = index
                     index += 1
