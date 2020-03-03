@@ -85,7 +85,7 @@ class StyleSheet(XmlElement):
         elem = XmlElement.new('numFmt')
         elem.attrib['numFmtId'] = f'{id}'
         elem.attrib['formatCode'] = code
-        self.append(elem)
+        self._numfmts.append(elem)
 
         return id
 
