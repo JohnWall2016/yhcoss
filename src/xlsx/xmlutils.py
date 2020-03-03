@@ -2,11 +2,10 @@ from typing import Callable, Iterator, Optional, cast, Union, Dict, Mapping, Any
 from lxml.etree import _Element, tostring, Element
 from lxml.etree import _Attrib as XmlAttribute, QName as XmlName
 
-
-NSMap = Dict[Union[str, None], str]
-DictStr = Dict[str, str]
-OptionalNamespace = Optional[Mapping[Optional[str], Any]]
 AnyStr = Union[str, bytes]
+NSMap = Dict[Union[str, None], str]
+DictAnyStr = Union[Dict[str, str], Dict[bytes, bytes]]
+OptionalNamespace = Optional[Mapping[Optional[str], Any]]
 
 
 class XmlElement:
@@ -17,7 +16,7 @@ class XmlElement:
             self._element = element
 
     @staticmethod
-    def new(tag: str, attrib: Optional[DictStr] = None, 
+    def new(tag: str, attrib: Optional[DictAnyStr] = None, 
             nsmap: Optional[NSMap] = None) -> 'XmlElement':
         return XmlElement(Element(tag, attrib=attrib, nsmap=nsmap))
 
@@ -90,6 +89,9 @@ class XmlElement:
             if self.attrib.has_key(name):
                 del self.attrib[name]
 
+    def clear(self):
+        self._element.clear()
+
     def put_attrib(self, attrs: Dict[Union[AnyStr, XmlName], Optional[AnyStr]]):
         for k, v in attrs.items():
             if k in self.attrib and v is None:
@@ -151,7 +153,14 @@ def try_parse(type_: Callable[[T], U], value: T, default: U = None):
     except:
         return default
 
-def to_str(anystr: Optional[Union[AnyStr, int]], encoding: str = 'utf-8') -> Optional[str]:
+def to_str(anystr: Union[AnyStr, int], encoding: str = 'utf-8') -> str:
+    if isinstance(anystr, str):
+        return anystr
+    elif isinstance(anystr, int):
+        return str(anystr)
+    return str(anystr, encoding)
+
+def to_optstr(anystr: Optional[Union[AnyStr, int]], encoding: str = 'utf-8') -> Optional[str]:
     if anystr is None or isinstance(anystr, str):
         return anystr
     elif isinstance(anystr, int):

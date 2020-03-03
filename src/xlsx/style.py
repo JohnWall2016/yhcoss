@@ -1,6 +1,6 @@
 from typing import Optional, Union, List
 from .style_sheet import StyleSheet
-from .xmlutils import XmlElement, AnyStr, try_parse, to_str
+from .xmlutils import XmlElement, AnyStr, try_parse, to_str, to_optstr
 
 
 class Color:
@@ -29,9 +29,9 @@ class Color:
 
 
 class Stop:
-    def __init__(self, position: str = None, color: Color = None):
-        self.position = position
-        self.color = Color
+    def __init__(self, position: AnyStr, color: Color = None):
+        self.position = to_str(position)
+        self.color = color
 
 
 class Fill:
@@ -44,18 +44,18 @@ class SolidFile(Fill):
 
 
 class PatternFill(Fill):
-    def __init__(self, type_: str = None, foreground: Color = None,
+    def __init__(self, type_: AnyStr, foreground: Color = None,
                  background: Color = None):
-        self.type_ = type_
+        self.type = to_str(type_)
         self.foreground = foreground
         self.background = background
 
 
 class GradientFill(Fill):
-    def __init__(self, type_: str = None, stops: List[Stop] = None,
-                 angle: str = None, left: str = None, right: str = None,
-                 top: str = None, bottom: str = None):
-        self.type_ = type_
+    def __init__(self, type_: AnyStr, stops: List[Stop] = None,
+                 angle: AnyStr = None, left: AnyStr = None, right: AnyStr = None,
+                 top: AnyStr = None, bottom: AnyStr = None):
+        self.type = type_
         self.stops = stops
         self.angle = angle
         self.left = left
@@ -102,7 +102,9 @@ class Style:
     def id(self):
         return self._id
 
-    def _get_color(self, elem: XmlElement, localname: str) -> Optional[Color]:
+    def _get_color(self, elem: Optional[XmlElement], localname: str) -> Optional[Color]:
+        if elem is None:
+            return None
         child = elem.find_by_localname(localname)
         if child:
             return Color.new(child)
@@ -127,7 +129,7 @@ class Style:
                                   {
                                       'rgb': to_upper(clr.rgb),
                                       'indexed': None,
-                                      'theme': to_str(clr.theme),
+                                      'theme': to_optstr(clr.theme),
                                       'tint': clr.tint
                                   })
             elem.remove_if_empty(localname)
@@ -197,7 +199,7 @@ class Style:
 
     @font_size.setter
     def font_size(self, value: Optional[int]):
-        self._font.put_child_attrib('sz', {'val': to_str(value)})
+        self._font.put_child_attrib('sz', {'val': to_optstr(value)})
         self._font.remove_if_empty('sz')
 
     @property
@@ -353,6 +355,63 @@ class Style:
     @vertical_text.setter
     def vertical_text(self, value: bool):
         self._set_text_rotation(255 if value else None)    
+
+    @property
+    def fill(self) -> Optional[Fill]:
+        pattern_fill = self._fill.find_by_localname('patternFill')
+        gradient_fill = self._fill.find_by_localname('gradientFill')
+        pattern_type = pattern_fill.get_attrib_value('patternType') if pattern_fill else None
+        if pattern_type == 'solid':
+            return SolidFile(self._get_color(pattern_fill, 'fgColor'))
+        elif pattern_type:
+            return PatternFill(pattern_type, 
+                               self._get_color(pattern_fill, 'fgColor'),
+                               self._get_color(pattern_fill, 'bgColor'))
+        elif gradient_fill:
+            gradient_type = gradient_fill.get_attrib_value('type') or 'linear'
+            stops: List[Stop] = []
+            for child in gradient_fill:
+                pos = child.get_attrib_value('position')
+                if pos:
+                    stops.append(Stop(pos, self._get_color(child, 'color')))
+            fill = GradientFill(gradient_type, stops)
+            if gradient_type == 'linear':
+                fill.angle = gradient_fill.get_attrib_value('degree')
+            else:
+                fill.left = gradient_fill.get_attrib_value('left')
+                fill.right = gradient_fill.get_attrib_value('right')
+                fill.top = gradient_fill.get_attrib_value('top')
+                fill.bottom = gradient_fill.get_attrib_value('bottom')
+            return fill
+        return None
+
+    @fill.setter
+    def fill(self, value: Fill):
+        self._fill.clear()
+        if isinstance(value, SolidFile):
+            pattern_fill = XmlElement.new('patternFill', {'patternType': 'solid'})
+            self._set_color(pattern_fill, 'fgColor', value.color)
+            self._fill.append(pattern_fill)
+        elif isinstance(value, PatternFill):
+            pattern_fill = XmlElement.new('patternFill', {'patternType': value.type})
+            self._set_color(pattern_fill, 'fgColor', value.foreground)
+            self._set_color(pattern_fill, 'bgColor', value.background)
+            self._fill.append(pattern_fill)
+        elif isinstance(value, GradientFill):
+            gradient_fill = XmlElement.new('gradientFill')
+            gradient_fill.put_attrib({
+                'type': 'path' if value.type == 'path' else None,
+                'left': value.left,
+                'right': value.right,
+                'top': value.top,
+                'bottom': value.bottom,
+                'degree': value.angle
+            })
+            for stop in value.stops:
+                elem = XmlElement.new('stop', {'position':stop.position})
+                self._set_color(elem, 'color', stop.color)
+                gradient_fill.append(elem)
+            self._fill.append(gradient_fill)
 
 
 
