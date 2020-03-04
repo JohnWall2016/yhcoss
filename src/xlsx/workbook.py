@@ -7,6 +7,7 @@ class Workbook(XmlElement):
 
     def __init__(self, element: _Element):
         super().__init__(element)
+        self._max_sheet_id: int = 0
 
     @staticmethod
     def from_file(filename: str):
