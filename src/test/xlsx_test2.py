@@ -1,7 +1,6 @@
 from ..xlsx.workbook import *
 from ..xlsx.xmlutils import *
 from typing import *
-import xml.etree.ElementTree
 
 def test():
     wb = Workbook.from_file('./data/test.xlsx')

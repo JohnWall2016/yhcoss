@@ -6,7 +6,7 @@ from copy import deepcopy
 
 
 class StyleSheet(XmlElement):
-    def __init__(self, element: _Element[str]) -> None:
+    def __init__(self, element: _Element) -> None:
         super().__init__(element)
 
         self._numfmts = NoneElement

@@ -26,7 +26,7 @@ class Relationships(XmlElement):
     namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
     xml_ns = 'http://www.w3.org/XML/1998/namespace'
 
-    def __init__(self, element: _Element[str]):
+    def __init__(self, element: _Element):
         super().__init__(element or
                          XmlElement.new('sst',
                                         nsmap={None: self.namespace}))

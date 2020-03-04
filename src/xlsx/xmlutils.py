@@ -1,4 +1,4 @@
-from typing import AnyStr, Callable, Generic, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
+from typing import Callable, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
 from lxml.etree import _Element, tostring, Element
 from lxml.etree import _Attrib as XmlAttribute, QName as XmlName
 
@@ -7,7 +7,7 @@ NSMap = Dict[Optional[str], str]
 Namespace = Mapping[Optional[str], Any]
 
 class XmlElement():
-    def __init__(self, element: Union[_Element[str], 'XmlElement']):
+    def __init__(self, element: Union[_Element, 'XmlElement']):
         if isinstance(element, XmlElement):
             self._element = element._element
         else:
@@ -15,10 +15,10 @@ class XmlElement():
 
     @staticmethod
     def new(tag: str, attrib: DictStr = None, nsmap: NSMap = None) -> 'XmlElement':
-        return XmlElement(Element[str](tag, attrib=attrib, nsmap=nsmap))
+        return XmlElement(Element(tag, attrib=attrib, nsmap=nsmap))
 
     @property
-    def attrib(self) -> XmlAttribute[str]:
+    def attrib(self) -> XmlAttribute:
         return self._element.attrib
 
     @property
