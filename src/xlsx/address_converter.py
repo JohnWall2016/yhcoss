@@ -27,8 +27,8 @@ class CellRef:
             return CellRef(row = int(m.group(4)),
                            column = column_name_to_number(m.group(2)),
                            column_name = m.group(2),
-                           row_anchored = m.group(3) != '',
-                           column_anchored = m.group(1) != '')
+                           row_anchored = m.group(3) == '$',
+                           column_anchored = m.group(1) == '$')
         else:
             return None
 
