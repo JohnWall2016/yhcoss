@@ -6,7 +6,7 @@ from lxml.etree import _Element
 class Relationships(XmlElement):
     relationshipSchemaPrefix = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/"
 
-    def __init__(self, element: _Element):
+    def __init__(self, element: _Element[str]):
         super().__init__(element or
                          XmlElement.new('Relationships',
                                         nsmap={None: 'http://schemas.openxmlformats.org/package/2006/relationships'}))

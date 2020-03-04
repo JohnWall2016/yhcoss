@@ -1,6 +1,7 @@
 from ..xlsx.workbook import *
 from ..xlsx.xmlutils import *
-
+from typing import *
+import xml.etree.ElementTree
 
 def test():
     wb = Workbook.from_file('./data/test.xlsx')
@@ -27,9 +28,9 @@ def test():
 
     for sheet in sheets:
         print(sheet.attrib)
-        name = sheet.get('name')
-        sheet_id = sheet.get('sheetId')
-        rid = sheet.get(XmlName(sheets.nsmap['r'], 'id'))
+        name = sheet.get_attrib_value('name')
+        sheet_id = sheet.get_attrib_value('sheetId')
+        rid = sheet.get_attrib_value(XmlName(sheets.nsmap['r'], 'id'))
         print(f'{name=} {sheet_id=} {rid=}')
 
 
@@ -44,8 +45,11 @@ def test_xmlelement():
     xml_ns = 'http://www.w3.org/XML/1998/namespace'
     subelem.attrib[XmlName(xml_ns, 'space')] = 'preserve'
 
+    for k, v in subelem.attrib.items():
+        print(f'{XmlName(k).localname=}, {v=}')
+
     print(elem)
-    print(subelem.get(XmlName(elem.nsmap['r'], 'id')))
+    print(subelem.get_attrib_value(XmlName(elem.nsmap['r'], 'id')))
     print(elem.nsmap)
     print(subelem.nsmap)
     print(XmlName(None, 'id'))
@@ -59,6 +63,11 @@ def test_xmlelement():
     subelem.remove_attrib(XmlName(subelem.nsmap['r'], 'id'))
     print(subelem)
 
+def test_element():
+    e = Element('abc')
+    if e.tail:
+        e.tail
+        
 
 #test()
-test_xmlelement()
+#test_xmlelement()

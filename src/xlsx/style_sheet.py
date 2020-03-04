@@ -1,13 +1,12 @@
 from typing import Dict, Optional
-from .xmlutils import XmlElement, try_parse, AnyStr, NoneElement
+from .xmlutils import XmlElement, try_parse, NoneElement
 from lxml.etree import _Element
 from .style import Style
 from copy import deepcopy
 
 
 class StyleSheet(XmlElement):
-
-    def __init__(self, element: _Element) -> None:
+    def __init__(self, element: _Element[str]) -> None:
         super().__init__(element)
 
         self._numfmts = NoneElement
@@ -49,8 +48,8 @@ class StyleSheet(XmlElement):
          self._borders, self._cellxfs]:
             elem.remove_attrib('count')
         
-        self._number_format_code_by_id: Dict[int, AnyStr] = {}
-        self._number_format_id_by_code: Dict[AnyStr, int] = {}
+        self._number_format_code_by_id: Dict[int, str] = {}
+        self._number_format_id_by_code: Dict[str, int] = {}
         self._next_number_format_id = starting_custom_number_format_id
         self._cache_number_formats()
 

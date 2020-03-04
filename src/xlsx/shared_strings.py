@@ -1,5 +1,5 @@
 from typing import List, Optional, Union, Dict
-from .xmlutils import XmlElement, AnyStr, XmlName, to_optstr
+from .xmlutils import XmlElement, XmlName
 from lxml.etree import _Element
 
 
@@ -14,7 +14,7 @@ class RichText(XmlElement):
             if c.tag.localname == 'r':
                 for cc in c:
                     if cc.tag.localname == 't':
-                        _str += to_optstr(cc.text) or ''
+                        _str += cc.text or ''
         return _str
 
     @property
@@ -26,12 +26,12 @@ class Relationships(XmlElement):
     namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
     xml_ns = 'http://www.w3.org/XML/1998/namespace'
 
-    def __init__(self, element: _Element):
+    def __init__(self, element: _Element[str]):
         super().__init__(element or
                          XmlElement.new('sst',
                                         nsmap={None: self.namespace}))
-        self._strlist: List[Union[AnyStr, RichText]] = []
-        self._idxdict: Dict[Union[AnyStr, RichText], int] = {}
+        self._strlist: List[Union[str, RichText]] = []
+        self._idxdict: Dict[Union[str, RichText], int] = {}
         self.remove_attrib('count', 'uniqueCount')
         self._cache_existing_shared_strings()
 
@@ -53,14 +53,14 @@ class Relationships(XmlElement):
                 else:
                     raise Exception(f'Unsupported element: {child}')
 
-    def get_string_by_index(self, index: int) -> AnyStr:
+    def get_string_by_index(self, index: int) -> str:
         string = self._strlist[index]
-        if isinstance(string, str) or isinstance(string, bytes):
-            return string
-        else:
+        if isinstance(string, RichText):
             return string.string
+        else:
+            return string
 
-    def get_index_from_string(self, string: AnyStr) -> int:
+    def get_index_from_string(self, string: str) -> int:
         if string in self._idxdict:
             return self._idxdict[string]
 

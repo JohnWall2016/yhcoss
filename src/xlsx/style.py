@@ -1,15 +1,14 @@
 from typing import Dict, Optional, Union, List
 from .style_sheet import StyleSheet
-from .xmlutils import XmlElement, AnyStr, try_parse, to_str, to_optstr, try_parse_default
+from .xmlutils import XmlElement, try_parse, try_parse_default
 
 
 class Color:
-
-    def __init__(self, rgb: AnyStr = None, theme: int = None,
-                 tint: AnyStr = None):
-        self.rgb: Optional[AnyStr] = rgb
+    def __init__(self, rgb: str = None, theme: int = None,
+                 tint: str = None):
+        self.rgb: Optional[str] = rgb
         self.theme: Optional[int] = theme
-        self.tint: Optional[AnyStr] = tint
+        self.tint: Optional[str] = tint
 
     @property
     def empty(self):
@@ -29,8 +28,8 @@ class Color:
 
 
 class Stop:
-    def __init__(self, position: AnyStr, color: Color = None):
-        self.position = to_str(position)
+    def __init__(self, position: str, color: Color = None):
+        self.position = position
         self.color = color
 
 
@@ -44,17 +43,17 @@ class SolidFile(Fill):
 
 
 class PatternFill(Fill):
-    def __init__(self, type_: AnyStr, foreground: Color = None,
+    def __init__(self, type_: str, foreground: Color = None,
                  background: Color = None):
-        self.type = to_str(type_)
+        self.type = type_
         self.foreground = foreground
         self.background = background
 
 
 class GradientFill(Fill):
-    def __init__(self, type_: AnyStr, stops: List[Stop] = None,
-                 angle: AnyStr = None, left: AnyStr = None, right: AnyStr = None,
-                 top: AnyStr = None, bottom: AnyStr = None):
+    def __init__(self, type_: str, stops: List[Stop] = None,
+                 angle: str = None, left: str = None, right: str = None,
+                 top: str = None, bottom: str = None):
         self.type = type_
         self.stops = stops
         self.angle = angle
@@ -65,7 +64,7 @@ class GradientFill(Fill):
 
 
 class Side:
-    def __init__(self, style: Optional[AnyStr] = None,
+    def __init__(self, style: Optional[str] = None,
                  color: Optional[Color] = None, direction: Optional[str] = None):
         self.style = style
         self.color = color
@@ -88,8 +87,9 @@ class Border:
 
 
 class Style:
-    def __init__(self, sheet: StyleSheet, id: int, xf: XmlElement,
-                 font: XmlElement, fill: XmlElement, border: XmlElement):
+    def __init__(self, sheet: StyleSheet, id: int,
+                 xf: XmlElement, font: XmlElement,
+                 fill: XmlElement, border: XmlElement):
         self._sheet = sheet
         self._id = id
         self._xf = xf
@@ -124,14 +124,17 @@ class Style:
         if clr is None or clr.empty:
             elem.remove(localname)
         else:
-            def to_upper(str: Optional[AnyStr]) -> Optional[str]:
-                return to_str(str).upper() if str else None
+            def to_upper(str_: Optional[str]) -> Optional[str]:
+                if str_ is None:
+                    return None
+                else:
+                    return str(str_).upper()
             elem.put_child_attrib(localname,
                                   {
                                       'rgb': to_upper(clr.rgb),
                                       'indexed': None,
-                                      'theme': to_optstr(clr.theme),
-                                      'tint': clr.tint
+                                      'theme': str(clr.theme) if clr.theme else None,
+                                      'tint': str(clr.tint),
                                   })
             elem.remove_if_empty(localname)
 
@@ -200,16 +203,16 @@ class Style:
 
     @font_size.setter
     def font_size(self, value: Optional[int]):
-        self._font.put_child_attrib('sz', {'val': to_optstr(value)})
+        self._font.put_child_attrib('sz', {'val': str(value) if value else None})
         self._font.remove_if_empty('sz')
 
     @property
-    def font_family(self) -> Optional[AnyStr]:
+    def font_family(self) -> Optional[str]:
         return self._font.get_child_attrib_value('name', 'val')
 
     @font_family.setter
-    def font_family(self, value: Optional[AnyStr]):
-        self._font.put_child_attrib('name', {'val': value})
+    def font_family(self, value: Optional[str]):
+        self._font.put_child_attrib('name', {'val': str(value) if value else None})
         self._font.remove_if_empty('name')
 
     @property
@@ -221,7 +224,7 @@ class Style:
         self._set_color(self._font, 'color', value)
 
     @property
-    def horizontal_alignment(self) -> Optional[AnyStr]:
+    def horizontal_alignment(self) -> Optional[str]:
         return self._xf.get_child_attrib_value('alignment', 'horizontal')
 
     @horizontal_alignment.setter
@@ -230,7 +233,7 @@ class Style:
         self._xf.remove_if_empty('alignment')
 
     @property
-    def vertical_alignment(self) -> Optional[AnyStr]:
+    def vertical_alignment(self) -> Optional[str]:
         return self._xf.get_child_attrib_value('alignment', 'vertical')
 
     @vertical_alignment.setter
@@ -239,7 +242,7 @@ class Style:
         self._xf.remove_if_empty('alignment')
 
     @property
-    def indent(self) -> Optional[AnyStr]:
+    def indent(self) -> Optional[str]:
         return self._xf.get_child_attrib_value('alignment', 'indent')
 
     @indent.setter
@@ -278,7 +281,7 @@ class Style:
         self._xf.remove_if_empty('alignment')
 
     @property
-    def text_direction(self) -> Optional[AnyStr]:
+    def text_direction(self) -> Optional[str]:
         order = self._xf.get_child_attrib_value('alignment', 'readingOrder')
         if order == '1':
             return 'left-to-right'
@@ -512,7 +515,7 @@ class Style:
                 self._set_color(child, 'color', c)
 
     @property
-    def border_style(self) -> Dict[str, Optional[AnyStr]]:
+    def border_style(self) -> Dict[str, Optional[str]]:
         border = self._get_border()
         return {k: v.style if v else None
                 for k, v in {'left': border.left,
@@ -522,7 +525,7 @@ class Style:
                              'diagonal': border.diagonal}.items()}
 
     @border_color.setter
-    def border_color(self, style: Union[str, Dict[str, Optional[AnyStr]]]):
+    def border_color(self, style: Union[str, Dict[str, Optional[str]]]):
         if isinstance(style, str):
             style = {'left': style,
                      'right': style,
@@ -548,7 +551,7 @@ class Style:
             })
 
     @property
-    def number_format(self) -> AnyStr:
+    def number_format(self) -> str:
         num_fmt_id = self._xf.get_attrib_value('numFmtId')
         id = try_parse_default(int, num_fmt_id, 0)
         return self._sheet.get_number_format_code(id)

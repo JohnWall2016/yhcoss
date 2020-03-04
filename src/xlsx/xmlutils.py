@@ -1,32 +1,29 @@
-from typing import Callable, Collection, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
-from lxml.etree import _Element, tostring, Element
+from typing import Callable, Generic, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
+from lxml.etree import _Element, tostring, Element, _AnyStr, _Namespace, _NSMap
 from lxml.etree import _Attrib as XmlAttribute, QName as XmlName
 
-AnyStr = Union[str, bytes]
-NSMap = Dict[Union[str, None], str]
-DictAnyStr = Union[Dict[str, str], Dict[bytes, bytes]]
-OptionalNamespace = Optional[Mapping[Optional[str], Any]]
+DictStr = Dict[str, str]
+NSMap = Dict[Optional[str], str]
+Namespace = Mapping[Optional[str], Any]
 
-
-class XmlElement:
-    def __init__(self, element: Union[_Element, 'XmlElement']):
+class XmlElement():
+    def __init__(self, element: Union[_Element[str], 'XmlElement']):
         if isinstance(element, XmlElement):
             self._element = element._element
         else:
             self._element = element
 
     @staticmethod
-    def new(tag: str, attrib: Optional[DictAnyStr] = None, 
-            nsmap: Optional[NSMap] = None) -> 'XmlElement':
-        return XmlElement(Element(tag, attrib=attrib, nsmap=nsmap))
+    def new(tag: str, attrib: DictStr = None, nsmap: NSMap = None) -> 'XmlElement':
+        return XmlElement(Element[str](tag, attrib=attrib, nsmap=nsmap))
 
     @property
-    def attrib(self) -> XmlAttribute:
+    def attrib(self):
         return self._element.attrib
 
     @property
     def nsmap(self) -> NSMap:
-        return cast(NSMap, self._element.nsmap)
+        return self._element.nsmap
 
     @property
     def tag(self) -> XmlName:
@@ -38,10 +35,10 @@ class XmlElement:
         return self._element.text
 
     @text.setter
-    def text(self, value: Optional[AnyStr]):
+    def text(self, value: Optional[str]):
         self._element.text = value
 
-    def find(self, name_or_path: str, namespace: OptionalNamespace = None) -> Optional['XmlElement']:
+    def find(self, name_or_path: str, namespace: Namespace = None) -> Optional['XmlElement']:
         elem = self._element.find(name_or_path, namespace)
         if elem is not None:
             return XmlElement(elem)
@@ -50,13 +47,13 @@ class XmlElement:
     def find_by_localname(self, localname: str) -> Optional['XmlElement']:
         return self.find(localname, self.nsmap)
 
-    def find_by_attrib(self, attr_name: Union[AnyStr, XmlName], attr_value: AnyStr) -> Optional['XmlElement']:
+    def find_by_attrib(self, attr_name: Union[str, XmlName], attr_value: str) -> Optional['XmlElement']:
         for child in self:
             if child.get_attrib_value(attr_name) == attr_value:
                 return child
         return None
 
-    def get_attrib_value(self, attr_name: Union[AnyStr, XmlName], default: Optional[AnyStr] = None) -> Optional[AnyStr]:
+    def get_attrib_value(self, attr_name: Union[str, XmlName], default: Optional[str] = None) -> Optional[str]:
         return self._element.get(attr_name, default)
 
     def remove(self, index_or_localname_or_elem: Union[int, str, 'XmlElement']):
@@ -84,7 +81,7 @@ class XmlElement:
                 len(e) == 0 and
                 len(e.attrib) == 0)
 
-    def remove_attrib(self, *attr_names: Union[AnyStr, XmlName]):
+    def remove_attrib(self, *attr_names: Union[str, XmlName]):
         for name in attr_names or []:
             if self.attrib.has_key(name):
                 del self.attrib[name]
@@ -92,14 +89,14 @@ class XmlElement:
     def clear(self):
         self._element.clear()
 
-    def put_attrib(self, attrs: Dict[Union[AnyStr, XmlName], Optional[AnyStr]]):
+    def put_attrib(self, attrs: Dict[Union[str, XmlName], Optional[str]]):
         for k, v in attrs.items():
             if k in self.attrib and v is None:
                 del self.attrib[k]
             elif v:
                 self.attrib[k] = v
 
-    def put_child_attrib(self, localname: str, attrs: Dict[Union[AnyStr, XmlName], Optional[AnyStr]]):
+    def put_child_attrib(self, localname: str, attrs: Dict[Union[str, XmlName], Optional[str]]):
         child = self.append_if_not_found(localname)
         child.put_attrib(attrs)
 
@@ -109,7 +106,7 @@ class XmlElement:
     def append(self, element: 'XmlElement'):
         self._element.append(element._element)
 
-    def get_child_attrib_value(self, localname: str, attr: str) -> Optional[AnyStr]:
+    def get_child_attrib_value(self, localname: str, attr: str) -> Optional[str]:
         c = self.find_by_localname(localname)
         if c:
             return c.attrib.get(attr)
@@ -158,17 +155,3 @@ def try_parse_default(type_: Callable[[T], U], value: T, default: V):
 
 def try_parse(type_: Callable[[T], U], value: T):
     return try_parse_default(type_, value, None)
-
-def to_str(anystr: Union[AnyStr, int], encoding: str = 'utf-8') -> str:
-    if isinstance(anystr, str):
-        return anystr
-    elif isinstance(anystr, int):
-        return str(anystr)
-    return str(anystr, encoding)
-
-def to_optstr(anystr: Optional[Union[AnyStr, int]], encoding: str = 'utf-8') -> Optional[str]:
-    if anystr is None or isinstance(anystr, str):
-        return anystr
-    elif isinstance(anystr, int):
-        return str(anystr)
-    return str(anystr, encoding)

@@ -1,11 +1,9 @@
 from typing import Final, Optional, Union
 import re
 
-from re import match
 
-
-_cell_regex: Final = r'(\$?)([A-Z]+)(\$?)(\d+)'
-_range_regex: Final = f'({_cell_regex}):({_cell_regex})'
+_cell_regex: Final[str] = r'(\$?)([A-Z]+)(\$?)(\d+)'
+_range_regex: Final[str] = f'({_cell_regex}):({_cell_regex})'
 
 
 class CellRef:
@@ -19,6 +17,14 @@ class CellRef:
         self._row_anchored = anchored or row_anchored
         self._column_anchored = anchored or column_anchored
         self._column_name = column_name or column_number_to_name(self._column)
+
+    @property
+    def row(self):
+        return self._row
+
+    @property
+    def column(self):
+        return self._column
 
     @staticmethod
     def from_address(address: str) -> Optional['CellRef']:
