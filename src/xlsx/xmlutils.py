@@ -1,5 +1,5 @@
-from typing import Callable, Generic, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
-from lxml.etree import _Element, tostring, Element, _AnyStr, _Namespace, _NSMap
+from typing import AnyStr, Callable, Generic, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
+from lxml.etree import _Element, tostring, Element
 from lxml.etree import _Attrib as XmlAttribute, QName as XmlName
 
 DictStr = Dict[str, str]
@@ -18,7 +18,7 @@ class XmlElement():
         return XmlElement(Element[str](tag, attrib=attrib, nsmap=nsmap))
 
     @property
-    def attrib(self):
+    def attrib(self) -> XmlAttribute[str]:
         return self._element.attrib
 
     @property
@@ -31,7 +31,7 @@ class XmlElement():
         return tag if isinstance(tag, XmlName) else XmlName(tag)
 
     @property
-    def text(self):
+    def text(self) -> Optional[str]:
         return self._element.text
 
     @text.setter

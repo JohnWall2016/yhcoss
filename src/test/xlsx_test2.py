@@ -69,5 +69,5 @@ def test_element():
         e.tail
         
 
-#test()
+test()
 #test_xmlelement()

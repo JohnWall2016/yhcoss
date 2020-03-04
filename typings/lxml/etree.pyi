@@ -17,8 +17,7 @@ from typing import (
     Sized,
     SupportsBytes,
     TypeVar,
-    overload,
-    # AnyStr
+    overload
 )
 
 from typing_extensions import Protocol
@@ -31,7 +30,7 @@ def __getattr__(name: str) -> Any: ...
 # unnecessary constraint. It seems reasonable to constrain each
 # List/Dict argument to use one type consistently, though, and it is
 # necessary in order to keep these brief.
-_AnyStr = TypeVar('_AnyStr', str, bytes) #AnyStr
+_AnyStr = TypeVar('_AnyStr', str, bytes)
 _AnySmartStr = Union['_ElementUnicodeResult', '_PyElementUnicodeResult', '_ElementStringResult']
 # XPath object - http://lxml.de/xpathxslt.html#xpath-return-values
 _XPathObject = Union[bool, float, _AnySmartStr, _AnyStr, List[Union['_Element', _AnySmartStr, _AnyStr, Tuple[Optional[_AnyStr], Optional[_AnyStr]]]]]
@@ -92,7 +91,7 @@ class _Element(Generic[_AnyStr], Iterable['_Element'], Sized):
     def insert(self, index: int, element: _Element[_AnyStr]) -> None: ...
     def iter(self,
              tag: Optional[_AnyStr] = ...,
-             *tags: _AnyStr) -> Iterable[_Element]: ...
+             *tags: _AnyStr) -> Iterable[_Element[_AnyStr]]: ...
     def makeelement(self,
                     _tag: Union[_AnyStr, QName],
                     attrib: Optional[_DictAnyStr] = ...,
@@ -194,7 +193,7 @@ class QName:
     namespace = ... # type: _AnyStr
     text = ... # type: _AnyStr
     def __init__(self,
-                 text_or_uri_element: Union[None, _AnyStr, _Element],
+                 text_or_uri_element: Union[None, _AnyStr, _Element[_AnyStr]],
                  tag: Optional[_AnyStr] = ...) -> None: ...
 
 
@@ -261,10 +260,10 @@ def Element(_tag: _AnyStr,
             attrib: Optional[_DictAnyStr] = ...,
             nsmap: Optional[_NSMap] = ...,
             **extra: _AnyStr) -> _Element[_AnyStr]: ...
-def SubElement(_parent: _Element, _tag: _AnyStr,
+def SubElement(_parent: _Element[_AnyStr], _tag: _AnyStr,
                attrib: Optional[_DictAnyStr] = ...,
                nsmap: Optional[_NSMap] = ...,
-               **extra: _AnyStr) -> _Element: ...
+               **extra: _AnyStr) -> _Element[_AnyStr]: ...
 def ElementTree(element: _Element[_AnyStr] = ...,
                 file: Union[_AnyStr, IO[Any]] = ...,
                 parser: XMLParser = ...) -> _ElementTree[_AnyStr]: ...
@@ -275,17 +274,17 @@ def ProcessingInstruction(
 
 PI = ProcessingInstruction
 
-def cleanup_namespaces(tree_or_element: Union[_Element, _ElementTree],
+def cleanup_namespaces(tree_or_element: Union[_Element[_AnyStr], _ElementTree[_AnyStr]],
                        top_nsmap: Optional[_NSMap] = ...,
                        keep_ns_prefixes: Optional[Iterable[_AnyStr]] = ...) -> None: ...
 
 def parse(source: Union[_AnyStr, IO[Any]],
           parser: XMLParser = ...,
-          base_url: _AnyStr = ...) -> _ElementTree: ...
+          base_url: _AnyStr = ...) -> _ElementTree[_AnyStr]: ...
 def fromstring(text: _AnyStr,
                parser: XMLParser = ...,
                *,
-               base_url: _AnyStr = ...) -> _Element: ...
+               base_url: _AnyStr = ...) -> _Element[_AnyStr]: ...
 def tostring(element_or_tree: Union[_Element[_AnyStr], _ElementTree[_AnyStr]],
              encoding: Union[str, type] = ...,
              method: str = ...,
