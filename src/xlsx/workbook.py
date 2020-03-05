@@ -1,11 +1,12 @@
 from zipfile import ZipFile
-from lxml.etree import XML, ElementTree, _Element
+
+from lxml.etree import QName, XML, ElementTree
 from typing import *
-from .xmlutils import XmlElement
+from .xmlutils import XmlElement, GenericElement
 
 
 class Workbook(XmlElement):
-    def __init__(self, element: _Element):
+    def __init__(self, element: GenericElement[str]):
         super().__init__(element)
         self._max_sheet_id: int = 0
 
@@ -15,12 +16,17 @@ class Workbook(XmlElement):
 
             def get_xml(path: str):
                 nonlocal archive
+                elem = XML(archive.read(path))
+                if (isinstance(elem.tag, bytes) or 
+                    (isinstance(elem.tag, QName) and 
+                     isinstance(elem.tag.localname, bytes))):
+                     raise Exception('Must be Unicode xml file')
                 return ElementTree(
-                    XML(archive.read(path))).getroot()
+                    cast(GenericElement[str], elem)).getroot()
 
             wb = Workbook(get_xml('xl/workbook.xml'))
             wb._init(get_xml)
             return wb
 
-    def _init(self, get_xml: Callable[[str], _Element]):
+    def _init(self, get_xml: Callable[[str], GenericElement[str]]):
         pass

@@ -3,7 +3,7 @@
 # Any use of `Any` below means I couldn't figure out the type.
 
 from typing import (
-    Any,
+    Any, AnyStr,
     Dict, Generic,
     IO,
     Iterable,
@@ -22,6 +22,7 @@ from typing import (
 
 from typing_extensions import Protocol
 
+from .types import Element as _GenericElement, ElementTree as _GenericElementTree
 
 # dummy for missing stubs
 def __getattr__(name: str) -> Any: ...
@@ -30,14 +31,14 @@ def __getattr__(name: str) -> Any: ...
 # unnecessary constraint. It seems reasonable to constrain each
 # List/Dict argument to use one type consistently, though, and it is
 # necessary in order to keep these brief.
-_AnyStr = str # TypeVar('_AnyStr', str, bytes) #AnyStr
+_AnyStr = TypeVar('_AnyStr', str, bytes) #AnyStr
 _AnySmartStr = Union['_ElementUnicodeResult', '_PyElementUnicodeResult', '_ElementStringResult']
 # XPath object - http://lxml.de/xpathxslt.html#xpath-return-values
 _XPathObject = Union[bool, float, _AnySmartStr, _AnyStr, List[Union['_Element', _AnySmartStr, _AnyStr, Tuple[Optional[_AnyStr], Optional[_AnyStr]]]]]
 _ListAnyStr = List[_AnyStr]
 _DictAnyStr = Dict[_AnyStr, _AnyStr]
 _Dict_Tuple2AnyStr_Any = Dict[Tuple[_AnyStr], Any]
-_NSMap = Dict[Optional[_AnyStr], _AnyStr]
+_NSMap = Union[Dict[Optional[str], str], Dict[Optional[bytes], bytes]] #Dict[Optional[_AnyStr], _AnyStr]
 _xpath = Union['XPath', _AnyStr]
 _Namespace = Mapping[Optional[_AnyStr], Any]
 _T = TypeVar('_T')
@@ -255,18 +256,18 @@ class XSLT:
 
 def Comment(text: Optional[_AnyStr] = ...) -> _Comment: ...
 
-def XML(text: Union[str, bytes]) -> _Element: ...
+def XML(text: Union[str, bytes]) -> _GenericElement[_AnyStr]: ...
 def Element(_tag: _AnyStr,
             attrib: Optional[_DictAnyStr] = ...,
             nsmap: Optional[_NSMap] = ...,
-            **extra: _AnyStr) -> _Element: ...
+            **extra: _AnyStr) -> _GenericElement[_AnyStr]: ...
 def SubElement(_parent: _Element, _tag: _AnyStr,
                attrib: Optional[_DictAnyStr] = ...,
                nsmap: Optional[_NSMap] = ...,
                **extra: _AnyStr) -> _Element: ...
-def ElementTree(element: _Element = ...,
+def ElementTree(element: _GenericElement[_AnyStr] = ...,
                 file: Union[_AnyStr, IO[Any]] = ...,
-                parser: XMLParser = ...) -> _ElementTree: ...
+                parser: XMLParser = ...) -> _GenericElementTree[_AnyStr]: ...
 def ProcessingInstruction(
         target: _AnyStr,
         text: _AnyStr = ...
@@ -285,7 +286,7 @@ def fromstring(text: _AnyStr,
                parser: XMLParser = ...,
                *,
                base_url: _AnyStr = ...) -> _Element: ...
-def tostring(element_or_tree: Union[_Element, _ElementTree],
+def tostring(element_or_tree: Union[_GenericElement[_AnyStr], _ElementTree],
              encoding: Union[str, type] = ...,
              method: str = ...,
              xml_declaration: bool = ...,

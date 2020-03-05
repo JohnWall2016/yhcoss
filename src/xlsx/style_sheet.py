@@ -1,12 +1,11 @@
 from typing import Dict, Optional
-from .xmlutils import XmlElement, try_parse, NoneElement
-from lxml.etree import _Element
+from .xmlutils import XmlElement, try_parse, NoneElement, GenericElement
 from .style import Style
 from copy import deepcopy
 
 
 class StyleSheet(XmlElement):
-    def __init__(self, element: _Element) -> None:
+    def __init__(self, element: GenericElement[str]) -> None:
         super().__init__(element)
 
         self._numfmts = NoneElement

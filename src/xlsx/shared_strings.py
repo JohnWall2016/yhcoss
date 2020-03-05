@@ -1,6 +1,5 @@
 from typing import List, Optional, Union, Dict
-from .xmlutils import XmlElement, XmlName
-from lxml.etree import _Element
+from .xmlutils import XmlElement, XmlName, GenericElement
 
 
 class RichText(XmlElement):
@@ -26,7 +25,7 @@ class Relationships(XmlElement):
     namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
     xml_ns = 'http://www.w3.org/XML/1998/namespace'
 
-    def __init__(self, element: _Element):
+    def __init__(self, element: GenericElement[str]):
         super().__init__(element or
                          XmlElement.new('sst',
                                         nsmap={None: self.namespace}))
