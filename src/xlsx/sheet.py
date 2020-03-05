@@ -20,8 +20,14 @@ class Sheet(XmlElement):
         self._id = id
         self._relationships = Relationships(relationships)
         self.append(XmlElement.new('sheetData'))
+        self._max_shared_formula_id = -1
         # TODO
 
     @property
     def workbook(self) -> Workbook:
         return self._workbook
+
+    def update_max_shared_formula_id(self, shared_formula_id: int):
+        if shared_formula_id > self._max_shared_formula_id:
+            self._max_shared_formula_id = shared_formula_id
+

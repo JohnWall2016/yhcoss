@@ -17,7 +17,7 @@ class RichText(XmlElement):
         return _str
 
     @property
-    def string(self):
+    def string(self) -> str:
         return self._str
 
 
