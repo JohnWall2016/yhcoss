@@ -1,5 +1,5 @@
 from typing import Dict, Optional, Union, List
-from .style_sheet import StyleSheet
+from .style_sheet import *
 from .xmlutils import XmlElement, try_parse, try_parse_default
 
 
@@ -87,7 +87,7 @@ class Border:
 
 
 class Style:
-    def __init__(self, sheet: StyleSheet, id: int,
+    def __init__(self, sheet: 'StyleSheet', id: int,
                  xf: XmlElement, font: XmlElement,
                  fill: XmlElement, border: XmlElement):
         self._sheet = sheet

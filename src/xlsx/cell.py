@@ -15,7 +15,7 @@ T = TypeVar('T')
 class Cell:
     def __init__(self, row: Row, element_or_column_index: Union[XmlElement, int], style_id: int = None):
         self._row = row
-        self._column_index: Optional[int] = None
+        #self._column_index: Optional[int] = None
         self._style_id: Optional[int] = None
         self._remaining_attrib: Dict[str, str] = {}
         self._type: Optional[str] = None
@@ -46,11 +46,11 @@ class Cell:
         return self._row.sheet.workbook
 
     @property
-    def row_index(self) -> Optional[int]:
+    def row_index(self) -> int:
         return self._row.index
 
     @property
-    def column_index(self) -> Optional[int]:
+    def column_index(self) -> int:
         return self._column_index
 
     @property

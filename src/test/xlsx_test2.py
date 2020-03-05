@@ -62,11 +62,12 @@ def test_xmlelement():
     subelem.remove_attrib(XmlName(subelem.nsmap['r'], 'id'))
     print(subelem)
 
-def test_element():
-    e = Element('abc')
-    if e.tail:
-        e.tail
+def test_workbook():
+    wb = Workbook.from_file('./data/test.xlsx')
+    print(wb.shared_strings._strlist)
+    print(wb.shared_strings._idxdict)
         
 
-test()
+#test()
 #test_xmlelement()
+test_workbook()

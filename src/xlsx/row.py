@@ -12,7 +12,10 @@ class Row(XmlElement):
         super().__init__(element)
         self._sheet = sheet
         r = self.get_attrib_value('r')
-        self._index = try_parse(int, r) if r else None
+        idx = int(r) if r else None
+        if idx is None:
+            raise Exception('Row index cannot be None')
+        self._index = idx
         self._cells: Dict[int, Cell] = {}
         for c in self:
             cell = Cell(self, c)
@@ -28,7 +31,7 @@ class Row(XmlElement):
         return self._sheet.workbook
 
     @property
-    def index(self) -> Optional[int]:
+    def index(self) -> int:
         return self._index
 
     def __len__(self) -> int:

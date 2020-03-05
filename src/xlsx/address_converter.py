@@ -55,11 +55,11 @@ class RangeRef:
                  start_column_or_end_cell: Optional[Union[int, CellRef]],
                  end_row: Optional[int] = None, 
                  end_column :Optional[int] = None,
-                 anchored = False, 
-                 start_row_anchored = False,
-                 start_column_anchored = False,
-                 end_row_anchored = False,
-                 end_column_anchored = False):
+                 anchored: bool = False, 
+                 start_row_anchored: bool = False,
+                 start_column_anchored: bool = False,
+                 end_row_anchored: bool = False,
+                 end_column_anchored: bool = False):
         if (isinstance(start_row_or_start_cell, int) and 
             isinstance(start_column_or_end_cell, int) and
             isinstance(end_row, int) and isinstance(end_column, int)):
@@ -86,6 +86,9 @@ class RangeRef:
                             CellRef.from_address(m.group(6)))
         else:
             return None
+
+    def to_address(self):
+        return self._start.to_address() + ':' + self._end.to_address()
         
         
 def column_number_to_name(number: int):

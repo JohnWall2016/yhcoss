@@ -19,6 +19,10 @@ class XmlElement():
         return XmlElement(Element(tag, attrib=attrib, nsmap=nsmap))
 
     @property
+    def element(self) -> GenericElement[str]:
+        return self._element
+
+    @property
     def attrib(self) -> XmlAttribute[str]:
         return self._element.attrib
 

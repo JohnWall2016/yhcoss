@@ -24,10 +24,11 @@ class SharedStrings(XmlElement):
     namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
     xml_ns = 'http://www.w3.org/XML/1998/namespace'
 
-    def __init__(self, element: GenericElement[str]):
-        super().__init__(element or
-                         XmlElement.new('sst',
-                                        nsmap={None: self.namespace}))
+    def __init__(self, element: Union[GenericElement[str], XmlElement]):
+        if element is None:
+            element = XmlElement.new('sst',
+                                  nsmap={ None: self.namespace })
+        super().__init__(element)
         self._strlist: List[Union[str, RichText]] = []
         self._idxdict: Dict[Union[str, RichText], int] = {}
         self.remove_attrib('count', 'uniqueCount')
