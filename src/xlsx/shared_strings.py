@@ -16,8 +16,7 @@ class RichText(XmlElement):
                         _str += cc.text or ''
         return _str
 
-    @property
-    def string(self) -> str:
+    def __str__(self):
         return self._str
 
 
@@ -54,10 +53,7 @@ class SharedStrings(XmlElement):
 
     def get_string_by_index(self, index: int) -> str:
         string = self._strlist[index]
-        if isinstance(string, RichText):
-            return string.string
-        else:
-            return string
+        return f'{string}'
 
     def get_index_from_string(self, string: str) -> int:
         if string in self._idxdict:

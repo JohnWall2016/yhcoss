@@ -8,6 +8,7 @@ from .address_converter import CellRef
 from .xmlutils import XmlElement
 from .sheet import Sheet
 import re
+from copy import deepcopy
 
 T = TypeVar('T')
 
@@ -69,12 +70,12 @@ class Cell:
         elif cls == float and not isinstance(self._value, FormulaError):
             val = self._value
             if isinstance(val, RichText):
-                val = val.string
+                val = str(val)
             return float(val)
         elif cls == int and not isinstance(self._value, FormulaError):
             val = self._value
             if isinstance(val, RichText):
-                val = val.string
+                val = str(val)
             return int(val)
         return None
 
@@ -169,7 +170,27 @@ class Cell:
             if self._formula:
                 f.text = self._formula
             elem.append(f)
-        # TODO
-
+        elif not clear_value and self._value:
+            type_: str = ''
+            text: str = ''
+            if self._type == 's' or isinstance(self._value, str) or isinstance(self._value, RichText):
+                type_ = 's'
+                text = str(self.workbook.shared_strings.get_index_from_string(str(self._value)))
+            elif isinstance(self._value, bool):
+                type_ = 'b'
+                text = '1' if self._value else '0'
+            elif isinstance(self._value, int) or isinstance(self._value, float):
+                type_ = ''
+                text = str(self._value)
+            if type_:
+                elem.attrib['t'] = type_
+                subelem = XmlElement.new('v')
+                subelem.text = text
+                elem.append(subelem)
+        if self._style_id:
+            elem.attrib['s'] = str(self._style_id)
+        if self._remaning_children:
+            for c in self._remaning_children:
+                elem.append(deepcopy(c))
         return elem
 
