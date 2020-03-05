@@ -21,7 +21,7 @@ class RichText(XmlElement):
         return self._str
 
 
-class Relationships(XmlElement):
+class SharedStrings(XmlElement):
     namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
     xml_ns = 'http://www.w3.org/XML/1998/namespace'
 

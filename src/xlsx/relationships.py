@@ -1,11 +1,11 @@
-from typing import Optional
-from .xmlutils import XmlElement, try_parse, try_parse_default, GenericElement
+from typing import Optional, Union
+from .xmlutils import XmlElement, try_parse_default, GenericElement
 
 
 class Relationships(XmlElement):
     relationshipSchemaPrefix = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/"
 
-    def __init__(self, element: GenericElement[str]):
+    def __init__(self, element: Union[GenericElement[str], XmlElement]):
         super().__init__(element or
                          XmlElement.new('Relationships',
                                         nsmap={None: 'http://schemas.openxmlformats.org/package/2006/relationships'}))
