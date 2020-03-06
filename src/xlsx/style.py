@@ -21,7 +21,7 @@ class Color:
         color.theme = try_parse(int, elem.get_attrib_value('theme'))
         if color.rgb is None:
             index = try_parse(int, elem.get_attrib_value('indexed'))
-            if index:
+            if index is not None:
                 color.rgb = colors[index]
         color.tint = elem.get_attrib_value('tint')
         return None if color.empty else color
@@ -106,7 +106,7 @@ class Style:
         if elem is None:
             return None
         child = elem.find_by_localname(localname)
-        if child:
+        if child is not None:
             return Color.new(child)
         return None
 

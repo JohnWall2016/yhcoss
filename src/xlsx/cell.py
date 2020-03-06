@@ -54,11 +54,8 @@ class Cell:
         return self._column_index
 
     @property
-    def address(self) -> Optional[str]:
-        if self.row_index and self.column_index:
-            return CellRef(self.row_index, self.column_index).to_address()
-        else:
-            return None
+    def address(self) -> str:
+        return CellRef(self.row_index, self.column_index).to_address()
 
     def value(self, cls: Type[T]) -> Optional[T]:
         if self._value is None:
@@ -95,16 +92,16 @@ class Cell:
         # Parse the value
         if self._type == 's':
             elem = element.find_by_localname('v')
-            if elem and elem.text:
+            if elem is not None and elem.text:
                 shared_index = int(elem.text)
                 self._value = self.workbook.shared_strings.get_string_by_index(shared_index)
         elif self._type == 'str':
             elem = element.find_by_localname('v')
-            if elem:
+            if elem is not None:
                 self._value = elem.text
         elif self._type == 'inlineStr':
             is_ = element.find_by_localname('is')
-            if is_ and len(is_):
+            if is_: # is_ is Not None and len(is_) > 0
                 t = is_[0]
                 if t.tag.localname == 't':
                     self._value = t.text
@@ -112,15 +109,15 @@ class Cell:
                     self._value = RichText(is_)
         elif self._type == 'b':
             elem = element.find_by_localname('v')
-            if elem:
+            if elem is not None:
                 self._value = elem.text == '1'
         elif self._type == 'e':
             elem = element.find_by_localname('v')
-            if elem and elem.text:
+            if elem is not None and elem.text:
                 self._value = FormulaError(elem.text)
         else:
             elem = element.find_by_localname('v')
-            if elem and elem.text:
+            if elem is not None and elem.text:
                 if re.match(r'\d+', elem.text):
                     self._value = int(elem.text)
                 elif re.match(r'\d+\.\d+', elem.text):
@@ -128,7 +125,7 @@ class Cell:
 
         # Parse the formula
         elem = element.find_by_localname('f')
-        if elem:
+        if elem is not None:
             for k, v in elem.attrib:
                 localname = XmlName(k).localname
                 if localname == 't':
@@ -137,7 +134,7 @@ class Cell:
                     self._forumla_ref = v
                 elif localname == 'si':
                     self._shared_formula_id = try_parse(int,v)
-                    if self._shared_formula_id:
+                    if self._shared_formula_id is not None:
                         self.sheet.update_max_shared_formula_id(self._shared_formula_id)
                 else:
                     self._remaning_formula_attrib[k] = v
@@ -187,7 +184,7 @@ class Cell:
                 subelem = XmlElement.new('v')
                 subelem.text = text
                 elem.append(subelem)
-        if self._style_id:
+        if self._style_id is not None:
             elem.attrib['s'] = str(self._style_id)
         if self._remaning_children:
             for c in self._remaning_children:

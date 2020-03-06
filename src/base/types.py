@@ -24,7 +24,7 @@ def issubclass_safe(cls, classinfo):
 def is_new_type_subclass_safe(cls, classinfo) -> bool:
     super_type = getattr(cls, "__supertype__", None)
 
-    if super_type:
+    if super_type is not None:
         return is_new_type_subclass_safe(super_type, classinfo)
 
     try:
@@ -108,7 +108,7 @@ def resolve_forwardref(cls, ref):
         base_globals = sys.modules[base.__module__].__dict__
         try:
             type_ = typing._eval_type(ref, base_globals, None)
-            if type_:
+            if type_ is not None:
                 return type_
         except:
             pass

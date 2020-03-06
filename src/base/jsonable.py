@@ -79,7 +79,7 @@ def _from_dict(cls, dict: Any, rootcls):
         return dict
     elif is_forwardref(cls):
         type_ = resolve_forwardref(rootcls, cls)
-        if type_:
+        if type_ is not None:
             return _from_dict(type_, dict, rootcls)
         return dict
     else:

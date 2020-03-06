@@ -38,7 +38,7 @@ class HttpRequest:
         self._path = path
         self._method = method
         self._encoding = encoding
-        if header:
+        if header is not None:
             self._header = header
         else:
             self._header = HttpHeader()
@@ -127,7 +127,7 @@ class HttpSocket:
         return header
 
     def read_body(self, header=None) -> str:
-        if header == None:
+        if header is None:
             header = self.read_header()
 
         buffer = b''

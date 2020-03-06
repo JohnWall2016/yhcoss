@@ -22,6 +22,10 @@ class Sheet(XmlElement):
         self._relationships = Relationships(relationships)
         self.append(XmlElement.new('sheetData'))
         self._max_shared_formula_id = -1
+        self.remove('dimension')
+        self._sheet_data = self.find_by_localname('sheetData')
+        if self._sheet_data is not None:
+            self.remove(self._sheet_data)
         # TODO
 
     @property

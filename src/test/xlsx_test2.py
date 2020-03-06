@@ -66,8 +66,23 @@ def test_workbook():
     wb = Workbook.from_file('./data/test.xlsx')
     print(wb.shared_strings._strlist)
     print(wb.shared_strings._idxdict)
-        
+
+def test_remove():
+    elem = XmlElement.new('abc')
+    elem.append(XmlElement.new('efg'))
+    print(elem)
+    subelem = elem.find_by_localname('efg')
+    print(subelem)
+    if subelem._element is None:
+        print('subelem is True')
+    else:
+        print('subelem is False')
+    elem.remove('efg')
+    print(elem)
+    print(subelem)
+
 
 #test()
 #test_xmlelement()
-test_workbook()
+#test_workbook()
+test_remove()

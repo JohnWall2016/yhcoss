@@ -19,8 +19,7 @@ class Row(XmlElement):
         self._cells: Dict[int, Cell] = {}
         for c in self:
             cell = Cell(self, c)
-            if cell.column_index:
-                self._cells[cell.column_index] = cell
+            self._cells[cell.column_index] = cell
 
     @property
     def sheet(self) -> Sheet:
@@ -51,7 +50,7 @@ class Row(XmlElement):
     def to_xml(self, row_index: int = None, clear_value: bool = False) -> XmlElement:
         self.clear()
         elem = deepcopy(self)
-        if row_index:
+        if row_index is not None:
             elem.attrib['r'] = str(row_index)
         for c in sorted(self._cells):
             elem.append(self._cells[c].to_xml())

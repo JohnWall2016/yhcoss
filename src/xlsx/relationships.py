@@ -16,15 +16,15 @@ class Relationships(XmlElement):
             if id and id >= self._next_id:
                 self._next_id = id + 1
 
-    def add(self, type_: str, target: str, targetMode: Optional[str] = None) -> XmlElement:
+    def add(self, type_: str, target: str, target_mode: Optional[str] = None) -> XmlElement:
         elem = XmlElement.new('Relationship',
                               {
                                   'Id': f'rId{self._next_id}',
                                   'Type': f'{self.relationshipSchemaPrefix}{type_}',
                                   'Target': target
                               })
-        if targetMode:
-            elem.attrib['TargetMode'] = targetMode
+        if target_mode:
+            elem.attrib['TargetMode'] = target_mode
         self._next_id += 1
         return elem
 

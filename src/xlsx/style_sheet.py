@@ -63,7 +63,7 @@ class StyleSheet(XmlElement):
         for child in self._numfmts:
             id = try_parse(int, child.get_attrib_value('numFmtId'))
             code = child.get_attrib_value('formatCode')
-            if id and code:
+            if id is not None and code:
                 self._number_format_code_by_id[id] = code
                 self._number_format_id_by_code[code] = id
                 if id >= self._next_number_format_id:
@@ -97,15 +97,15 @@ class StyleSheet(XmlElement):
             xf = deepcopy(source_xf)
             if source_xf.get_attrib_value('applyFont'):
                 font_id = try_parse(int, source_xf.get_attrib_value('fontId'))
-                if font_id:
+                if font_id is not None:
                     font = deepcopy(self._fonts[font_id])
             if source_xf.get_attrib_value('applyFill'):
                 fill_id = try_parse(int, source_xf.get_attrib_value('fillId'))
-                if fill_id:
+                if fill_id is not None:
                     fill = deepcopy(self._fills[fill_id])
             if source_xf.get_attrib_value('applyBorder'):
                 border_id = try_parse(int, source_xf.get_attrib_value('borderId'))
-                if border_id:
+                if border_id is not None:
                     border = deepcopy(self._borders[border_id])
         if font is None:
             font = XmlElement.new('font')
