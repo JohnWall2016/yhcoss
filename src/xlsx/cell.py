@@ -167,7 +167,7 @@ class Cell:
             if self._formula:
                 f.text = self._formula
             elem.append(f)
-        elif not clear_value and self._value:
+        elif not clear_value and self._value is not None:
             type_: str = ''
             text: str = ''
             if self._type == 's' or isinstance(self._value, str) or isinstance(self._value, RichText):

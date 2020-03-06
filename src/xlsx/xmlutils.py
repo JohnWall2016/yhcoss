@@ -66,7 +66,7 @@ class XmlElement():
             del self._element[index_or_localname_or_elem]
         elif isinstance(index_or_localname_or_elem, str):
             elem = self.find_by_localname(index_or_localname_or_elem)
-            if elem:
+            if elem is not None:
                 self.remove(elem)
         else:
             self._element.remove(index_or_localname_or_elem._element)
@@ -113,13 +113,13 @@ class XmlElement():
 
     def get_child_attrib_value(self, localname: str, attr: str) -> Optional[str]:
         c = self.find_by_localname(localname)
-        if c:
+        if c is not None:
             return c.attrib.get(attr)
         return None
 
     def append_if_not_found(self, localname: str) -> 'XmlElement':
         elem = self.find_by_localname(localname)
-        if elem:
+        if elem is not None:
             return elem
         elem = XmlElement.new(localname)
         self.append(elem)

@@ -133,7 +133,7 @@ class Style:
                                   {
                                       'rgb': to_upper(clr.rgb),
                                       'indexed': None,
-                                      'theme': str(clr.theme) if clr.theme else None,
+                                      'theme': str(clr.theme) if clr.theme is not None else None,
                                       'tint': str(clr.tint),
                                   })
             elem.remove_if_empty(localname)
@@ -203,7 +203,7 @@ class Style:
 
     @font_size.setter
     def font_size(self, value: Optional[int]):
-        self._font.put_child_attrib('sz', {'val': str(value) if value else None})
+        self._font.put_child_attrib('sz', {'val': str(value) if value is not None else None})
         self._font.remove_if_empty('sz')
 
     @property
@@ -212,7 +212,7 @@ class Style:
 
     @font_family.setter
     def font_family(self, value: Optional[str]):
-        self._font.put_child_attrib('name', {'val': str(value) if value else None})
+        self._font.put_child_attrib('name', {'val': value if value else None})
         self._font.remove_if_empty('name')
 
     @property
@@ -304,7 +304,7 @@ class Style:
 
     def _set_text_rotation(self, value: Optional[float]):
         self._xf.put_child_attrib(
-            'alignment', {'textRotation': f'{value}' if value else None})
+            'alignment', {'textRotation': f'{value}' if value is not None else None})
         self._xf.remove_if_empty('alignment')
 
     @property
@@ -368,14 +368,14 @@ class Style:
         pattern_fill = self._fill.find_by_localname('patternFill')
         gradient_fill = self._fill.find_by_localname('gradientFill')
         pattern_type = pattern_fill.get_attrib_value(
-            'patternType') if pattern_fill else None
+            'patternType') if pattern_fill is not None else None
         if pattern_type == 'solid':
             return SolidFile(self._get_color(pattern_fill, 'fgColor'))
         elif pattern_type:
             return PatternFill(pattern_type,
                                self._get_color(pattern_fill, 'fgColor'),
                                self._get_color(pattern_fill, 'bgColor'))
-        elif gradient_fill:
+        elif gradient_fill is not None:
             gradient_type = gradient_fill.get_attrib_value('type') or 'linear'
             stops: List[Stop] = []
             for child in gradient_fill:
@@ -475,8 +475,8 @@ class Style:
             child = self._border.find_by_localname(name)
             if child is None:
                 return
-            child.put_attrib({'style': side.style if side else None})
-            self._set_color(child, 'color', side.color if side else None)
+            child.put_attrib({'style': side.style if side is not None else None})
+            self._set_color(child, 'color', side.color if side is not None else None)
             if name == 'diagonal':
                 child.put_attrib({
                     'diagonalUp': self._get_diagonal(side, 'up', 'both'),
@@ -494,7 +494,7 @@ class Style:
     @property
     def border_color(self) -> Dict[str, Optional[Color]]:
         border = self._get_border()
-        return {k: v.color if v else None
+        return {k: v.color if v is not None else None
                 for k, v in {'left': border.left,
                              'right': border.right,
                              'top': border.top,
@@ -511,13 +511,13 @@ class Style:
                      'diagonal': color}
         for n, c in color.items():
             child = self._border.find_by_localname(n)
-            if child:
+            if child is not None:
                 self._set_color(child, 'color', c)
 
     @property
     def border_style(self) -> Dict[str, Optional[str]]:
         border = self._get_border()
-        return {k: v.style if v else None
+        return {k: v.style if v is not None else None
                 for k, v in {'left': border.left,
                              'right': border.right,
                              'top': border.top,
@@ -534,7 +534,7 @@ class Style:
                      'diagonal': style}
         for n, s in style.items():
             child = self._border.find_by_localname(n)
-            if child:
+            if child is not None:
                 child.put_attrib({'style': s})
 
     @property
@@ -544,7 +544,7 @@ class Style:
     @diagonal_border_direction.setter
     def diagonal_border_direction(self, direction: Optional[str]):
         child = self._border.find_by_localname('diagonal')
-        if child:
+        if child is not None:
             child.put_attrib({
                 'diagonalUp': self._get_diagonal(direction, 'up', 'both'),
                 'diagonalDown': self._get_diagonal(direction, 'down', 'both'),
