@@ -272,7 +272,7 @@ class _Sbstate(Any):
                 return '终止参保人员'
             else:
                 return f'未知类型终止缴费人员: {cbstate}'
-        elif jfstate == None:
+        elif jfstate is None:
             return '未参保'
         else:
             return f'未知类型人员: {jfstate}, {cbstate}'

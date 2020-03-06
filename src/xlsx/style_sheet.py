@@ -27,19 +27,19 @@ class StyleSheet(XmlElement):
             elif name == 'cellXfs':
                 self._cellxfs = child
 
-        if self._numfmts == NoneElement:
+        if self._numfmts is NoneElement:
             self._numfmts = XmlElement.new('numFmts')
             self.insert(0, self._numfmts)
-        if self._fonts == NoneElement:
+        if self._fonts is NoneElement:
             self._fonts = XmlElement.new('fonts')
             self.insert(1, self._fonts)
-        if self._fills == NoneElement:
+        if self._fills is NoneElement:
             self._fills = XmlElement.new('fills')
             self.insert(2, self._fills)
-        if self._borders == NoneElement:
+        if self._borders is NoneElement:
             self._borders = XmlElement.new('borders')
             self.insert(3, self._borders)
-        if self._cellxfs == NoneElement:
+        if self._cellxfs is NoneElement:
             self._cellxfs = XmlElement.new('cellXfs')
             self.insert(4, self._cellxfs)
 
