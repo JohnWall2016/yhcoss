@@ -37,6 +37,6 @@ class Range:
                          end_row_anchored)
         address = ''
         if include_sheet_name and self.sheet.name:
-            address += f'\'{self.sheet.name.replace("\'", "\'\'")}\'!'
+            address += "'" + self.sheet.name.replace("'", "''") + "'!"
         address += range.to_address()
         return address

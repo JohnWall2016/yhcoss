@@ -83,6 +83,54 @@ class Workbook(XmlElement):
             wb = Workbook(wb_elem, get_xml)
             return wb
 
+    def to_data(self):
+        
+        def insert_archive_file(path: str, elem: XmlElement):
+            print('=' * 60)
+            print(f'path: {path}')
+            print(elem.tostring(encoding='unicode', pretty_print=True))
+            print('=' * 60)
+
+        self._set_sheet_refs()
+
+        defined_names_elem = self.find_by_localname('definedNames')
+        for i in range(0, len(self._sheets)):
+            sheet = self._sheets[i]
+            if sheet.auto_filter is not None:
+                if defined_names_elem is None:
+                    defined_names_elem = XmlElement.new('definedNames')
+                    self.insert_in_order(defined_names_elem, element_order)
+                defined_name_elem = XmlElement.new('definedName',
+                                                   {
+                                                       'name': '_xlnm._FilterDatabase',
+                                                       'localSheetId': i,
+                                                       'hidden': '1'
+                                                   })
+                defined_name_elem.text = sheet.auto_filter.address(include_sheet_name=True, anchored=True)
+                defined_names_elem.append(defined_name_elem)
+
+        self._sheets_elem.clear()
+        for i in range(0, len(self._sheets)):
+            sheet = self._sheets[i]
+            sheet_xmls = sheet.to_xmls()
+            id = sheet_xmls['id'].get_attrib_value_local('id')
+            if id:
+                relationships = self._relationships.find_by_id(id)
+                relationships.attrib['Target'] = f'worksheets/sheet{i + 1}.xml'
+            self._sheets_elem.append(sheet_xmls['id'])
+            insert_archive_file(f'xl/worksheets/sheet{i + 1}.xml', sheet_xmls['sheet'])
+            relationships_elem = sheet_xmls['relationships']
+            if relationships_elem is not None:
+                insert_archive_file(f'xl/worksheets/_rels/sheet{i + 1}.xml.rels', relationships_elem)
+
+        insert_archive_file('[Content_Types].xml', self._content_types)
+        insert_archive_file('docProps/app.xml', self._app_properties)
+        insert_archive_file('docProps/core.xml', self._core_properties)
+        insert_archive_file('xl/_rels/workbook.xml.rels', self._relationships)
+        insert_archive_file('xl/sharedStrings.xml', self._shared_strings)
+        insert_archive_file('xl/styles.xml', self._style_sheet)
+        insert_archive_file('xl/workbook.xml', self)
+
     def sheet(self, name: str) -> Optional[Sheet]:
         if self._sheets:
             for sheet in self._sheets:

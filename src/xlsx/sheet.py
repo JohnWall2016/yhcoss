@@ -5,6 +5,7 @@ from .relationships import Relationships
 from .xmlutils import XmlElement, try_parse
 
 from .row import *
+from .range import Range
 
 import src.xlsx.workbook as wb
 
@@ -30,6 +31,7 @@ class Sheet(XmlElement):
         self._id = id
         self._relationships = Relationships(relationships)
         self._max_shared_formula_id = -1
+        self._auto_filter: Optional[Range] = None
         self.remove('dimension')
 
         self._sheet_data_elem = self.find_by_localname('sheetData')
@@ -52,8 +54,8 @@ class Sheet(XmlElement):
         else:
             self._cols_elem = XmlElement.new('cols')
         for col in self._cols_elem:
-            min = col.get_attrib_value('min')
-            max = col.get_attrib_value('max')
+            min = col.get_attrib_value_local('min')
+            max = col.get_attrib_value_local('max')
             min = int(min) if min else None
             max = int(max) if max else None
             if min is not None and max is not None:
@@ -117,6 +119,10 @@ class Sheet(XmlElement):
     @property
     def last_row_index(self):
         return self._last_row_index
+
+    @property
+    def auto_filter(self) -> Optional[Range]:
+        return self._auto_filter
 
     def __getitem__(self, index: int) -> 'Row':
         if index in self._rows:
@@ -197,7 +203,7 @@ class Sheet(XmlElement):
         cols: List[XmlElement] = []
         for i in sorted(self._cols):
             col = self._cols[i]
-            if i == col.get_attrib_value('min') and len(col.attrib) > 2:
+            if str(i) == col.get_attrib_value('min') and len(col.attrib) > 2:
                 cols.append(col.deepcopy())
         self._cols_elem.clear()
         cols_elem = self._cols_elem.deepcopy()
@@ -229,6 +235,9 @@ class Sheet(XmlElement):
         data_validations_elem.append_all((v.deepcopy() for v in self._data_validations.values()))
         if len(data_validations_elem) > 0:
             elem.insert_in_order(data_validations_elem, element_order)
+
+        if self._auto_filter is not None:
+            elem.insert_in_order(XmlElement.new('autoFilter', {'ref': self._auto_filter.address()}), element_order)
 
         return {
             'id': self._id,

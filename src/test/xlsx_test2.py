@@ -78,6 +78,8 @@ def test_workbook():
     sheet = wb.sheet('Sheet1')
     print(sheet.cell_at(3, 4).value())
 
+    wb.to_data()
+
 def test_remove():
     elem = XmlElement.new('abc')
     elem.append(XmlElement.new('efg'))

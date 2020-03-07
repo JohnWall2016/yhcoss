@@ -91,6 +91,12 @@ class XmlElement():
     def get_attrib_value(self, attr_name: Union[str, XmlName], default: Optional[str] = None) -> Optional[str]:
         return self._element.get(attr_name, default)
 
+    def get_attrib_value_local(self, localname: str, default: Optional[str] = None) -> Optional[str]:
+        for c, v in self.attrib.items():
+            if XmlName(c).localname == localname:
+                return v
+        return default
+            
     def remove(self, index_or_localname_or_elem: Union[int, str, 'XmlElement']):
         if isinstance(index_or_localname_or_elem, int):
             del self._element[index_or_localname_or_elem]
@@ -122,7 +128,8 @@ class XmlElement():
                 del self.attrib[name]
 
     def clear(self):
-        self._element.clear()
+        for c in self:
+            self.remove(c)
 
     def deepcopy(self) -> 'XmlElement':
         return XmlElement(deepcopy(self._element))
