@@ -1,4 +1,4 @@
-from zipfile import ZipFile
+from zipfile import ZipFile, ZIP_DEFLATED
 from lxml.etree import QName, XML, ElementTree
 from typing import *
 
@@ -24,6 +24,10 @@ class Workbook(XmlElement):
         if elem is not None:
             self._content_types = ContentTypes(elem)
 
+        elem = get_xml('_rels/.rels') # TODO
+        if elem is not None:
+            self._rels = Relationships(elem)
+
         elem = get_xml('docProps/app.xml')
         if elem is not None:
             self._app_properties = AppProperties(elem)
@@ -31,6 +35,10 @@ class Workbook(XmlElement):
         elem = get_xml('docProps/core.xml')
         if elem is not None:
             self._core_properties = CoreProperties(elem)
+
+        elem = get_xml('docProps/custom.xml') # TODO
+        if elem is not None:
+            self._custom = elem
 
         elem = get_xml('xl/_rels/workbook.xml.rels')
         self._relationships = Relationships(elem)
@@ -41,6 +49,10 @@ class Workbook(XmlElement):
         elem = get_xml('xl/styles.xml')
         if elem is not None:
             self._style_sheet = StyleSheet(elem)
+
+        elem = get_xml('xl/theme/theme1.xml') # TODO
+        if elem is not None:
+            self._theme = elem
 
         if self._relationships.find_by_type('sharedStrings') is None:
             self._relationships.add('sharedStrings', 'sharedStrings.xml')
@@ -77,19 +89,26 @@ class Workbook(XmlElement):
                      raise Exception('Must be Unicode xml file')
                 return XmlElement(ElementTree(cast(GenericElement[str], elem)).getroot())
 
+            #for f in archive.NameToInfo:
+            #    print(f)
             wb_elem = get_xml('xl/workbook.xml')
             if wb_elem is None:
                 raise Exception('Cannot read \'xl/workbook.xml\'')
             wb = Workbook(wb_elem, get_xml)
             return wb
 
-    def to_data(self):
+    def save_file(self, filename: str):
+        archive = ZipFile(filename, 'w', ZIP_DEFLATED, allowZip64=True)
         
         def insert_archive_file(path: str, elem: XmlElement):
-            print('=' * 60)
-            print(f'path: {path}')
-            print(elem.tostring(encoding='unicode', pretty_print=True))
-            print('=' * 60)
+            #print('=' * 60)
+            #print(f'path: {path}')
+            #print(elem.tostring(encoding='unicode', pretty_print=True))
+            #print('=' * 60)
+            nonlocal archive
+            archive.writestr(path, 
+                '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' +
+                elem.tostring(encoding='unicode', pretty_print=False))
 
         self._set_sheet_refs()
 
@@ -121,15 +140,20 @@ class Workbook(XmlElement):
             insert_archive_file(f'xl/worksheets/sheet{i + 1}.xml', sheet_xmls['sheet'])
             relationships_elem = sheet_xmls['relationships']
             if relationships_elem is not None:
-                insert_archive_file(f'xl/worksheets/_rels/sheet{i + 1}.xml.rels', relationships_elem)
+                insert_archive_file(f'/xl/worksheets/_rels/sheet{i + 1}.xml.rels', relationships_elem)
 
         insert_archive_file('[Content_Types].xml', self._content_types)
+        insert_archive_file('_rels/.rels', self._rels)
         insert_archive_file('docProps/app.xml', self._app_properties)
         insert_archive_file('docProps/core.xml', self._core_properties)
+        insert_archive_file('docProps/custom.xml', self._custom)
         insert_archive_file('xl/_rels/workbook.xml.rels', self._relationships)
         insert_archive_file('xl/sharedStrings.xml', self._shared_strings)
         insert_archive_file('xl/styles.xml', self._style_sheet)
+        insert_archive_file('xl/theme/theme1.xml', self._theme)
         insert_archive_file('xl/workbook.xml', self)
+
+        archive.close()
 
     def sheet(self, name: str) -> Optional[Sheet]:
         if self._sheets:

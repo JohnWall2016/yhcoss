@@ -78,8 +78,6 @@ def test_workbook():
     sheet = wb.sheet('Sheet1')
     print(sheet.cell_at(3, 4).value())
 
-    wb.to_data()
-
 def test_remove():
     elem = XmlElement.new('abc')
     elem.append(XmlElement.new('efg'))
@@ -123,8 +121,15 @@ def test_xmlname():
                 nsmap=xmlns.nsmap)
     print(e)
 
+
+def test_save():
+    wb = Workbook.from_file('./data/test.xlsx')
+    wb[0].cell('B4').value = '刘德华'
+    wb.save_file('./data/test2.xlsx')
+
 #test()
 #test_xmlelement()
-test_workbook()
+#test_workbook()
 #test_remove()
 #test_xmlname()
+test_save()

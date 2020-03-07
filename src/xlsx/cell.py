@@ -1,5 +1,5 @@
 import re
-from typing import Optional, Dict, TypeVar, Union, List, Type
+from typing import Optional, Dict, TypeVar, Union, List, Type, Any
 
 from .formula_error import FormulaError
 from .shared_strings import RichText
@@ -58,7 +58,7 @@ class Cell:
     def address(self) -> str:
         return CellRef(self.row_index, self.column_index).to_address()
 
-    def value(self, cls: Type[T] = str) -> Optional[T]:
+    def get_value(self, cls: Type[T] = str) -> Optional[T]:
         if self._value is None:
             return None
         elif isinstance(self._value, cls):
@@ -76,6 +76,14 @@ class Cell:
                 val = str(val)
             return int(val)
         return None
+
+    @property
+    def value(self) -> Any:
+        return self._value
+    
+    @value.setter
+    def value(self, value: Any):
+        self._value = value
 
     def _parse(self, element: XmlElement):
         for name, value in element.attrib.items():

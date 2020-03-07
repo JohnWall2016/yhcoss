@@ -2,7 +2,7 @@ from typing import Optional, Dict, List, Final
 
 from .address_converter import RangeRef, CellRef
 from .relationships import Relationships
-from .xmlutils import XmlElement, try_parse
+from .xmlutils import XmlElement, try_parse, XmlNamespace
 
 from .row import *
 from .range import Range
@@ -16,15 +16,16 @@ class Sheet(XmlElement):
     def __init__(self, workbook: 'wb.Workbook', id: XmlElement, element: Optional[XmlElement],
                  relationships: Optional[XmlElement]):
         if element is None:
+            xmlns = XmlNamespace({
+                None: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+                'mc': 'http://schemas.openxmlformats.org/markup-compatibility/2006',
+                'x14ac': 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac'
+            })
             element = XmlElement.new(
                 'worksheet',
-                attrib={'mc:Ignorable': 'x14ac'},
-                nsmap={
-                    None: self.namespace,
-                    'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
-                    'mc': 'http://schemas.openxmlformats.org/markup-compatibility/2006',
-                    'x14ac': 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac'
-                })
+                attrib={xmlns.tag('mc', 'Ignorable'): 'x14ac'},
+                nsmap=xmlns.nsmap)
             element.append(XmlElement.new('sheetData'))
         super().__init__(element)
         self._workbook = workbook
