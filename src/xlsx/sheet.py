@@ -1,15 +1,18 @@
-from .cell import Cell
-from .row import Row
+from typing import Optional, Dict, List, Final
+
 from .address_converter import RangeRef, CellRef
 from .relationships import Relationships
-from .workbook import *
 from .xmlutils import XmlElement, try_parse
+
+from .row import *
+
+import src.xlsx.workbook as wb
 
 
 class Sheet(XmlElement):
     namespace = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
 
-    def __init__(self, workbook: 'Workbook', id: XmlElement, element: Optional[XmlElement],
+    def __init__(self, workbook: 'wb.Workbook', id: XmlElement, element: Optional[XmlElement],
                  relationships: Optional[XmlElement]):
         if element is None:
             element = XmlElement.new(
@@ -100,18 +103,22 @@ class Sheet(XmlElement):
         self._hyper_links_elem.clear()
             
     @property
-    def workbook(self) -> 'Workbook':
+    def workbook(self) -> 'wb.Workbook':
         return self._workbook
 
     @property
     def name(self):
-        return self.get_attrib_value('name')
+        return self._id.get_attrib_value('name')
 
     @name.setter
     def name(self, value: str):
-        self.attrib['name'] = value
+        self._id.attrib['name'] = value
 
-    def __getitem__(self, index: int) -> Row:
+    @property
+    def last_row_index(self):
+        return self._last_row_index
+
+    def __getitem__(self, index: int) -> 'Row':
         if index in self._rows:
             return self._rows[index]
         row_elem = XmlElement.new('row', {'r':str(index)})
@@ -121,10 +128,10 @@ class Sheet(XmlElement):
             self._last_row_index = index
         return row
 
-    def cell_at(self, row: int, column: int) -> Cell:
+    def cell_at(self, row: int, column: int) -> 'Cell':
         return self[row][column]
 
-    def cell(self, name: str) -> Optional[Cell]:
+    def cell(self, name: str) -> Optional['Cell']:
         ref = CellRef.from_address(name)
         if ref is not None:
             return self.cell_at(ref.row, ref.column)
@@ -172,13 +179,13 @@ class Sheet(XmlElement):
             self._emerge_cells.update(merge_cells)
         return row
 
-    def insert_row_copy_from(self, index: int, copy_index: int, clear_value: bool = False) -> Row:
+    def insert_row_copy_from(self, index: int, copy_index: int, clear_value: bool = False) -> 'Row':
         copy_row = self._rows.get(copy_index)
         if copy_row is None:
             return self.insert_row(index)
         return self.insert_row(index, copy_row.to_xml(index, clear_value), copy_index)
 
-    def copy_row_to(self, copy_index: int, to_index: int, clear_value: bool = False) -> Row:
+    def copy_row_to(self, copy_index: int, to_index: int, clear_value: bool = False) -> 'Row':
         if copy_index == to_index:
             return self[copy_index]
         else:

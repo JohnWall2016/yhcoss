@@ -67,6 +67,16 @@ def test_workbook():
     wb = Workbook.from_file('./data/test.xlsx')
     print(wb.shared_strings._strlist)
     print(wb.shared_strings._idxdict)
+    print(len(wb))
+
+    sheet = wb[0]
+    print(sheet.last_row_index)
+    print(sheet.name)
+    print(sheet[3].cell('C').value())
+    print(sheet.cell('A1').value())
+
+    sheet = wb.sheet('Sheet1')
+    print(sheet.cell_at(3, 4).value())
 
 def test_remove():
     elem = XmlElement.new('abc')
@@ -111,8 +121,8 @@ def test_xmlname():
                 nsmap=xmlns.nsmap)
     print(e)
 
-test()
+#test()
 #test_xmlelement()
-#test_workbook()
+test_workbook()
 #test_remove()
 #test_xmlname()

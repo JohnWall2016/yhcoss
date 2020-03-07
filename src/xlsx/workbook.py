@@ -1,15 +1,16 @@
 from zipfile import ZipFile
-
 from lxml.etree import QName, XML, ElementTree
 from typing import *
+
 from .xmlutils import XmlElement, GenericElement, try_parse, try_parse_default
 from .shared_strings import SharedStrings
-from .sheet import Sheet
 from .content_types import ContentTypes
 from .app_properties import AppProperties
 from .core_properties import CoreProperties
 from .relationships import Relationships
 from .style_sheet import StyleSheet
+
+from .sheet import *
 
 
 class Workbook(XmlElement):
@@ -81,6 +82,19 @@ class Workbook(XmlElement):
                 raise Exception('Cannot read \'xl/workbook.xml\'')
             wb = Workbook(wb_elem, get_xml)
             return wb
+
+    def sheet(self, name: str) -> Optional[Sheet]:
+        if self._sheets:
+            for sheet in self._sheets:
+                if sheet.name == name:
+                    return sheet
+        return None
+    
+    def __len__(self)-> int:
+        return len(self._sheets)
+    
+    def __getitem__(self, index: int) -> Sheet:
+        return self._sheets[index]
 
     @property
     def shared_strings(self) -> SharedStrings:

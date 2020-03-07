@@ -1,18 +1,20 @@
+import re
 from typing import Optional, Dict, TypeVar, Union, List, Type
+
 from .formula_error import FormulaError
 from .shared_strings import RichText
-from .workbook import *
 from .xmlutils import XmlElement, XmlName, try_parse
-from .row import *
 from .address_converter import CellRef
 from .xmlutils import XmlElement
-from .sheet import *
-import re
+
+import src.xlsx.workbook as wb
+import src.xlsx.sheet as st
+import src.xlsx.row as rw
 
 T = TypeVar('T')
 
 class Cell:
-    def __init__(self, row: 'Row', element_or_column_index: Union[XmlElement, int], style_id: int = None):
+    def __init__(self, row: 'rw.Row', element_or_column_index: Union[XmlElement, int], style_id: int = None):
         self._row = row
         #self._column_index: Optional[int] = None
         self._style_id: Optional[int] = None
@@ -33,15 +35,15 @@ class Cell:
             self._style_id = style_id
 
     @property
-    def row(self) -> 'Row':
+    def row(self) -> 'rw.Row':
         return self._row
 
     @property
-    def sheet(self) -> 'Sheet':
+    def sheet(self) -> 'st.Sheet':
         return self._row.sheet
 
     @property
-    def workbook(self) -> 'Workbook':
+    def workbook(self) -> 'wb.Workbook':
         return self._row.sheet.workbook
 
     @property
@@ -56,7 +58,7 @@ class Cell:
     def address(self) -> str:
         return CellRef(self.row_index, self.column_index).to_address()
 
-    def value(self, cls: Type[T]) -> Optional[T]:
+    def value(self, cls: Type[T] = str) -> Optional[T]:
         if self._value is None:
             return None
         elif isinstance(self._value, cls):

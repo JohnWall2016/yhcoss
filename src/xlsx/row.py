@@ -1,13 +1,14 @@
-from .address_converter import column_name_to_number
 from typing import Dict
-from .workbook import *
-from .cell import Cell
-from .sheet import *
-from .xmlutils import XmlElement
+from .address_converter import column_name_to_number
+from .xmlutils import XmlElement, try_parse
 
+from .cell import Cell
+
+import src.xlsx.workbook as wb
+import src.xlsx.sheet as st
 
 class Row(XmlElement):
-    def __init__(self, sheet: 'Sheet', element: XmlElement):
+    def __init__(self, sheet: 'st.Sheet', element: XmlElement):
         super().__init__(element)
         self._sheet = sheet
         r = self.get_attrib_value('r')
@@ -21,11 +22,11 @@ class Row(XmlElement):
             self._cells[cell.column_index] = cell
 
     @property
-    def sheet(self) -> 'Sheet':
+    def sheet(self) -> 'st.Sheet':
         return self._sheet
 
     @property
-    def workbook(self) -> 'Workbook':
+    def workbook(self) -> 'wb.Workbook':
         return self._sheet.workbook
 
     @property
@@ -40,7 +41,7 @@ class Row(XmlElement):
     def __len__(self) -> int:
         return len(self._cells)
 
-    def __getitem__(self, index: int) -> Cell:
+    def __getitem__(self, index: int) -> 'Cell':
         if index in self._cells:
             return self._cells[index]
 
@@ -59,7 +60,7 @@ class Row(XmlElement):
         
         return cell
 
-    def cell(self, name: str) -> Cell:
+    def cell(self, name: str) -> 'Cell':
         index = column_name_to_number(name)        
         return self[index]
 
