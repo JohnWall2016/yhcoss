@@ -22,6 +22,10 @@ class CellRef:
     def row(self):
         return self._row
 
+    @row.setter
+    def row(self, value: int):
+        self._row = value
+
     @property
     def column(self):
         return self._column
@@ -77,6 +81,14 @@ class RangeRef:
             self._end = start_column_or_end_cell
         else:
             raise Exception('The first and second arguments must both be int or CellRef')
+
+    @property
+    def start(self):
+        return self._start
+
+    @property
+    def end(self):
+        return self._end
 
     @staticmethod
     def from_address(address: str) -> Optional['RangeRef']:

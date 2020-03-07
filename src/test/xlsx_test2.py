@@ -13,6 +13,7 @@ def test():
 
     print(f'{wb.nsmap=}')
     sheets = wb.find('sheets', wb.nsmap)
+    print(XmlName(sheets._element))
     print(f'{sheets=}')
     print(f'{sheets.tostring(encoding="unicode")=}')
 
@@ -81,8 +82,37 @@ def test_remove():
     print(elem)
     print(subelem)
 
+def test_xmlname():
+    nsmap: Dict[Optional[str], str]={'ab': 'abcdefg'}
+    e = XmlElement.new('abc', nsmap=nsmap)
+    f = XmlElement.new('{abcdefg}efg')
+    e.append(f)
+    f.addprevious(XmlElement.new('hij'))
+    print(e)
 
-#test()
+    print(e.find('hij'))
+    print(e.find('hij', nsmap))
+    print(e.find_by_localname('hij'))
+    
+    print(e.find('{abcdefg}efg'))
+    print(e.find('ab:efg', nsmap))
+    print(e.find_by_localname('efg'))
+
+    xmlns = XmlNamespace({
+                None: 'http://schemas.openxmlformats.org/spreadsheetml/2006/main',
+                'r': 'http://schemas.openxmlformats.org/officeDocument/2006/relationships',
+                'mc': 'http://schemas.openxmlformats.org/markup-compatibility/2006',
+                'x14ac': 'http://schemas.microsoft.com/office/spreadsheetml/2009/9/ac'
+            })
+    print(xmlns.tag('mc', 'Ignorable'))
+    e = XmlElement.new(
+                'worksheet',
+                attrib={xmlns.tag('mc', 'Ignorable'): 'x14ac'},
+                nsmap=xmlns.nsmap)
+    print(e)
+
+test()
 #test_xmlelement()
 #test_workbook()
-test_remove()
+#test_remove()
+#test_xmlname()

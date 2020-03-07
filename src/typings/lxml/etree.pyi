@@ -22,7 +22,7 @@ from typing import (
 
 from typing_extensions import Protocol
 
-from .types import Element as _GenericElement, ElementTree as _GenericElementTree
+from .types import GenericElement as _GenericElement, GenericElementTree as _GenericElementTree
 
 # dummy for missing stubs
 def __getattr__(name: str) -> Any: ...
@@ -286,7 +286,7 @@ def fromstring(text: _AnyStr,
                parser: XMLParser = ...,
                *,
                base_url: _AnyStr = ...) -> _Element: ...
-def tostring(element_or_tree: Union[_GenericElement[_AnyStr], _ElementTree],
+def tostring(element_or_tree: Union[_GenericElement[_AnyStr], _GenericElementTree[_AnyStr]],
              encoding: Union[str, type] = ...,
              method: str = ...,
              xml_declaration: bool = ...,

@@ -5,7 +5,7 @@ from .xmlutils import XmlElement, try_parse_default, GenericElement
 class Relationships(XmlElement):
     relationshipSchemaPrefix = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/"
 
-    def __init__(self, element: Union[GenericElement[str], XmlElement]):
+    def __init__(self, element: Optional[XmlElement]):
         if element is None:
             element = XmlElement.new('Relationships',
                                     nsmap={None: 'http://schemas.openxmlformats.org/package/2006/relationships'})

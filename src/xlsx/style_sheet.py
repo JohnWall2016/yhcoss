@@ -1,11 +1,10 @@
 from typing import Dict, Optional
 from .xmlutils import XmlElement, try_parse, NoneElement, GenericElement
 from .style import Style
-from copy import deepcopy
 
 
 class StyleSheet(XmlElement):
-    def __init__(self, element: GenericElement[str]) -> None:
+    def __init__(self, element: XmlElement) -> None:
         super().__init__(element)
 
         self._numfmts = NoneElement
@@ -94,19 +93,19 @@ class StyleSheet(XmlElement):
         xf: Optional[XmlElement] = None
         if source_id >= 0:
             source_xf = self._cellxfs[source_id]
-            xf = deepcopy(source_xf)
+            xf = source_xf.deepcopy()
             if source_xf.get_attrib_value('applyFont'):
                 font_id = try_parse(int, source_xf.get_attrib_value('fontId'))
                 if font_id is not None:
-                    font = deepcopy(self._fonts[font_id])
+                    font = self._fonts[font_id].deepcopy()
             if source_xf.get_attrib_value('applyFill'):
                 fill_id = try_parse(int, source_xf.get_attrib_value('fillId'))
                 if fill_id is not None:
-                    fill = deepcopy(self._fills[fill_id])
+                    fill = self._fills[fill_id].deepcopy()
             if source_xf.get_attrib_value('applyBorder'):
                 border_id = try_parse(int, source_xf.get_attrib_value('borderId'))
                 if border_id is not None:
-                    border = deepcopy(self._borders[border_id])
+                    border = self._borders[border_id].deepcopy()
         if font is None:
             font = XmlElement.new('font')
         self._fonts.append(font)

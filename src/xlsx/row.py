@@ -1,14 +1,13 @@
-from copy import deepcopy
-from src.xlsx.address_converter import column_name_to_number
-from typing import Optional, Union, Dict
-from .workbook import Workbook
+from .address_converter import column_name_to_number
+from typing import Dict
+from .workbook import *
 from .cell import Cell
-from .sheet import Sheet
-from .xmlutils import XmlElement, try_parse
+from .sheet import *
+from .xmlutils import XmlElement
 
 
 class Row(XmlElement):
-    def __init__(self, sheet: Sheet, element: XmlElement):
+    def __init__(self, sheet: 'Sheet', element: XmlElement):
         super().__init__(element)
         self._sheet = sheet
         r = self.get_attrib_value('r')
@@ -22,34 +21,51 @@ class Row(XmlElement):
             self._cells[cell.column_index] = cell
 
     @property
-    def sheet(self) -> Sheet:
+    def sheet(self) -> 'Sheet':
         return self._sheet
 
     @property
-    def workbook(self) -> Workbook:
+    def workbook(self) -> 'Workbook':
         return self._sheet.workbook
 
     @property
     def index(self) -> int:
         return self._index
 
+    @index.setter
+    def index(self, value: int):
+        self._index = value
+        self.attrib['r'] = str(value)
+
     def __len__(self) -> int:
         return len(self._cells)
 
-    def __getitem__(self, column_index: int) -> Cell:
-        return self._cells[column_index]
+    def __getitem__(self, index: int) -> Cell:
+        if index in self._cells:
+            return self._cells[index]
 
-    def __contain__(self, column_index: int) -> bool:
-        return column_index in self._cells
+        s = self.get_attrib_value('s')
+        row_style_id = try_parse(int, s) if s else None
+        column_style_id = self.sheet.existing_column_style_id(index)
 
-    def get(self, column_index_or_name: Union[int, str]) -> Optional[Cell]:
-        if isinstance(column_index_or_name, str):
-            column_index_or_name = column_name_to_number(column_index_or_name)        
-        return self._cells.get(column_index_or_name)
+        style_id = None
+        if row_style_id is not None:
+            style_id = row_style_id
+        elif column_style_id is not None:
+            style_id = column_style_id
+
+        cell = Cell(self, index, style_id)
+        self._cells[index] = cell
+        
+        return cell
+
+    def cell(self, name: str) -> Cell:
+        index = column_name_to_number(name)        
+        return self[index]
 
     def to_xml(self, row_index: int = None, clear_value: bool = False) -> XmlElement:
         self.clear()
-        elem = deepcopy(self)
+        elem = self.deepcopy()
         if row_index is not None:
             elem.attrib['r'] = str(row_index)
         for c in sorted(self._cells):

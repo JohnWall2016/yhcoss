@@ -1,11 +1,36 @@
-from typing import Callable, Iterator, Optional, cast, Union, Dict, Mapping, Any, TypeVar
+from copy import deepcopy
+from typing import (Callable, Iterable, Iterator, Optional, cast, Union, Dict, Mapping,
+                    Any, TypeVar, List)
 from lxml.etree import tostring, Element
-from lxml.etree import QName as XmlName
-from ..typings.lxml.types import Element as GenericElement, Attrib as XmlAttribute
+from ..typings.lxml.types import GenericElement, GenericAttrib, GenericQName
 
 DictStr = Dict[str, str]
 NSMap = Dict[Optional[str], str]
 Namespace = Mapping[Optional[str], Any]
+
+
+class XmlNamespace:
+    def __init__(self, nsmap: NSMap):
+        self._nsmap = nsmap
+
+    def tag(self, ns_or_local: str, local: str = None) -> str:
+        if local is None:
+            ns = self._nsmap.get(None)
+            local = ns_or_local
+        else:
+            ns = self._nsmap.get(ns_or_local)
+        if ns:
+            return f'{{{ns}}}{local}'
+        else:
+            return local
+
+    @property
+    def nsmap(self):
+        return self._nsmap
+
+
+XmlName = GenericQName['str']
+
 
 class XmlElement():
     def __init__(self, element: Union[GenericElement[str], 'XmlElement']):
@@ -23,7 +48,7 @@ class XmlElement():
         return self._element
 
     @property
-    def attrib(self) -> XmlAttribute[str]:
+    def attrib(self) -> GenericAttrib[str]:
         return self._element.attrib
 
     @property
@@ -33,7 +58,9 @@ class XmlElement():
     @property
     def tag(self) -> XmlName:
         tag = self._element.tag
-        return tag if isinstance(tag, XmlName) else XmlName(tag)
+        if isinstance(tag, str):
+            return XmlName(tag)
+        return tag
 
     @property
     def text(self) -> Optional[str]:
@@ -50,7 +77,10 @@ class XmlElement():
         return None
 
     def find_by_localname(self, localname: str) -> Optional['XmlElement']:
-        return self.find(localname, self.nsmap)
+        for child in self:
+            if child.tag.localname == localname:
+                return child
+        return None
 
     def find_by_attrib(self, attr_name: Union[str, XmlName], attr_value: str) -> Optional['XmlElement']:
         for child in self:
@@ -94,6 +124,9 @@ class XmlElement():
     def clear(self):
         self._element.clear()
 
+    def deepcopy(self) -> 'XmlElement':
+        return XmlElement(deepcopy(self._element))
+
     def put_attrib(self, attrs: Dict[Union[str, XmlName], Optional[str]]):
         for k, v in attrs.items():
             if k in self.attrib and v is None:
@@ -105,11 +138,32 @@ class XmlElement():
         child = self.append_if_not_found(localname)
         child.put_attrib(attrs)
 
+    def addprevious(self, element: 'XmlElement'):
+        self._element.addprevious(element._element)
+    
+    def addnext(self, element: 'XmlElement'):
+        self._element.addnext(element._element)
+
     def insert(self, index: int, element: 'XmlElement'):
         self._element.insert(index, element._element)
-        
+
+    def insert_in_order(self, element: 'XmlElement', order: List[str]):
+        localname = element.tag.localname
+        if localname in order:
+            index = order.index(localname) + 1
+            for i in range(index, len(order)):
+                e = self.find_by_localname(order[i])
+                if e is not None:
+                    e.addprevious(element)
+                    return
+        self.append(element)
+
     def append(self, element: 'XmlElement'):
         self._element.append(element._element)
+
+    def append_all(self, elements: Iterable['XmlElement']):
+        for e in elements:
+            self.append(e)
 
     def get_child_attrib_value(self, localname: str, attr: str) -> Optional[str]:
         c = self.find_by_localname(localname)
@@ -125,7 +179,7 @@ class XmlElement():
         self.append(elem)
         return elem
 
-    def tostring(self, **kwargs):
+    def tostring(self, **kwargs) -> str:
         return tostring(self._element, **kwargs)
 
     def __iter__(self) -> Iterator['XmlElement']:
@@ -139,10 +193,10 @@ class XmlElement():
         return XmlElement(self._element[index])
 
     def __repr__(self) -> str:
-        return cast(str, tostring(self._element, encoding='unicode', pretty_print=True))
+        return tostring(self._element, encoding='unicode', pretty_print=True)
 
     def __str__(self) -> str:
-        return cast(str, tostring(self._element, encoding='unicode', pretty_print=False))
+        return tostring(self._element, encoding='unicode', pretty_print=False)
 
 
 NoneElement = XmlElement.new('__NONE__')
@@ -151,6 +205,7 @@ NoneElement = XmlElement.new('__NONE__')
 T = TypeVar('T')
 U = TypeVar('U')
 V = TypeVar('V')
+
 
 def try_parse_default(type_: Callable[[T], U], value: T, default: V):
     try:

@@ -1,19 +1,18 @@
 from typing import Optional, Dict, TypeVar, Union, List, Type
 from .formula_error import FormulaError
 from .shared_strings import RichText
-from .workbook import Workbook
+from .workbook import *
 from .xmlutils import XmlElement, XmlName, try_parse
-from .row import Row
+from .row import *
 from .address_converter import CellRef
 from .xmlutils import XmlElement
-from .sheet import Sheet
+from .sheet import *
 import re
-from copy import deepcopy
 
 T = TypeVar('T')
 
 class Cell:
-    def __init__(self, row: Row, element_or_column_index: Union[XmlElement, int], style_id: int = None):
+    def __init__(self, row: 'Row', element_or_column_index: Union[XmlElement, int], style_id: int = None):
         self._row = row
         #self._column_index: Optional[int] = None
         self._style_id: Optional[int] = None
@@ -34,15 +33,15 @@ class Cell:
             self._style_id = style_id
 
     @property
-    def row(self) -> Row:
+    def row(self) -> 'Row':
         return self._row
 
     @property
-    def sheet(self) -> Sheet:
+    def sheet(self) -> 'Sheet':
         return self._row.sheet
 
     @property
-    def workbook(self) -> Workbook:
+    def workbook(self) -> 'Workbook':
         return self._row.sheet.workbook
 
     @property
@@ -188,6 +187,6 @@ class Cell:
             elem.attrib['s'] = str(self._style_id)
         if self._remaning_children:
             for c in self._remaning_children:
-                elem.append(deepcopy(c))
+                elem.append(c.deepcopy())
         return elem
 

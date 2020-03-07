@@ -1,8 +1,8 @@
 from typing import Optional
-from .xmlutils import XmlElement, GenericElement
+from .xmlutils import XmlElement
 
 class ContentTypes(XmlElement):
-    def __init__(self, element: GenericElement[str]):
+    def __init__(self, element: XmlElement):
         super().__init__(element)
 
     def add(self, part_name: str, content_type: str) -> XmlElement:
