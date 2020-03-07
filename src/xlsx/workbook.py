@@ -51,15 +51,16 @@ class Workbook(XmlElement):
         if self._sheets_elem is not None:
             for i in range(0, len(self._sheets_elem)):
                 sheet_id_elem = self._sheets_elem[i]
-                sheet_id = sheet_id_elem.get_attrib_value('sheetId')
-                if sheet_id:
-                    sheet_id = try_parse_default(int, sheet_id, -1)
-                    if sheet_id > self._max_sheet_id:
-                        self._max_sheet_id = sheet_id
+                sheet_id = try_parse_default(int, sheet_id_elem.get_attrib_value('sheetId'), -1)
+                if sheet_id > self._max_sheet_id:
+                    self._max_sheet_id = sheet_id
                 sheet_elem = get_xml(f'xl/worksheets/sheet{i + 1}.xml')
                 sheet_relationships_elem = get_xml(f'xl/worksheets/_rels/sheet{i + 1}.xml.rels')
                 self._sheets.append(Sheet(self, sheet_id_elem, sheet_elem, sheet_relationships_elem))
 
+        self._defined_name_local_sheet: Dict[XmlElement, Sheet] = {}
+
+        self._parse_sheet_refs()
 
     @staticmethod
     def from_file(filename: str):
@@ -85,4 +86,59 @@ class Workbook(XmlElement):
     def shared_strings(self) -> SharedStrings:
         return self._shared_strings
 
-    
+    def _parse_sheet_refs(self):
+        book_views_elem = self.find_by_localname('bookViews')
+        work_book_view_elem = book_views_elem.find_by_localname('workbookView')
+        active_tab_id = try_parse_default(int, work_book_view_elem.get_attrib_value('activeTab'), 0)
+        self._active_sheet = self._sheets[active_tab_id]
+
+        defined_names_elem = self.find_by_localname('definedNames')
+        if defined_names_elem:
+            for defined_name_elem in defined_names_elem:
+                local_sheet_id = try_parse(int, defined_name_elem.find_by_localname('localSheetId'))
+                if local_sheet_id is not None:
+                    self._defined_name_local_sheet[defined_name_elem] = self._sheets[local_sheet_id]
+            
+    def _set_sheet_refs(self):
+        book_views_elem = self.find_by_localname('bookViews')
+        if book_views_elem is None:
+            book_views_elem = XmlElement.new('bookViews')
+            self.insert_in_order(book_views_elem, element_order)
+
+        workbook_view_elem = book_views_elem.find_by_localname('workbookView')
+        if workbook_view_elem is None:
+            workbook_view_elem = XmlElement.new('workbookView')
+            book_views_elem.append(workbook_view_elem)
+
+        if self._active_sheet in self._sheets:
+            workbook_view_elem.attrib['activeTab'] = str(self._sheets.index(self._active_sheet))
+
+        defined_names_elem = self.find_by_localname('definedNames')
+        if defined_names_elem:
+            for defined_name_elem in defined_names_elem:
+                local_sheet = self._defined_name_local_sheet.get(defined_name_elem)
+                if local_sheet is not None and local_sheet in self._sheets:
+                    defined_name_elem.attrib['localSheetId'] = str(self._sheets.index(local_sheet))
+
+element_order: Final = [
+    "fileVersion",
+    "fileSharing",
+    "workbookPr",
+    "workbookProtection",
+    "bookViews",
+    "sheets",
+    "functionGroups",
+    "externalReferences",
+    "definedNames",
+    "calcPr",
+    "oleSize",
+    "customWorkbookViews",
+    "pivotCaches",
+    "smartTagPr",
+    "smartTagTypes",
+    "webPublishing",
+    "fileRecoveryPr",
+    "webPublishObjects",
+    "extLst"
+  ]
+                

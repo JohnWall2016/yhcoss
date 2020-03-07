@@ -207,11 +207,13 @@ U = TypeVar('U')
 V = TypeVar('V')
 
 
-def try_parse_default(type_: Callable[[T], U], value: T, default: V):
+def try_parse_default(type_: Callable[[T], U], value: Optional[T], default: V):
+    if value is None:
+        return default
     try:
         return type_(value)
     except:
         return default
 
-def try_parse(type_: Callable[[T], U], value: T):
+def try_parse(type_: Callable[[T], U], value: Optional[T]):
     return try_parse_default(type_, value, None)
