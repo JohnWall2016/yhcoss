@@ -128,10 +128,10 @@ def test_save():
 
     sheet = wb[0]
     frow = 4
-    count = 20000
+    count = 200
     for r in range(frow, frow + count):
         index = r - frow + 1
-        print(r)
+        print(index)
         row = sheet.copy_row_to(frow, r, True)
         row.cell('A').value = index
         row.cell('B').value = '刘德华2'
@@ -139,9 +139,25 @@ def test_save():
 
     wb.save_file('./data/test2.xlsx')
 
+def test_save2():
+    wb = Workbook.from_file('./data/test.xlsx')
+    sheet = wb[0]
+    frow = 4
+    count = 20000
+    sheet.insert_rows(frow + 1, count - 1, copy_index=4, clear_value=True)
+    for r in range(frow, frow + count):
+        index = r - frow + 1
+        print(index)
+        row = sheet[r]
+        row.cell('A').value = index
+        row.cell('B').value = '刘德华2'
+        row.cell('E').value = 93.7
+    sheet[6].cell('B').value = '黎明'
+    wb.save_file('./data/test2.xlsx')
+
 #test()
 #test_xmlelement()
 #test_workbook()
 #test_remove()
 #test_xmlname()
-test_save()
+test_save2()

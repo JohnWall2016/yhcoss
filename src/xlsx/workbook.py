@@ -50,9 +50,7 @@ class Workbook(XmlElement):
         if elem is not None:
             self._core_properties = CoreProperties(elem)
 
-        elem = get_xml('docProps/custom.xml') # TODO
-        if elem is not None:
-            self._custom = elem
+        self._custom = get_xml('docProps/custom.xml') # TODO
 
         elem = get_xml('xl/_rels/workbook.xml.rels')
         self._relationships = Relationships(elem)
@@ -64,9 +62,7 @@ class Workbook(XmlElement):
         if elem is not None:
             self._style_sheet = StyleSheet(elem)
 
-        elem = get_xml('xl/theme/theme1.xml') # TODO
-        if elem is not None:
-            self._theme = elem
+        self._theme = get_xml('xl/theme/theme1.xml') # TODO
 
         if self._relationships.find_by_type('sharedStrings') is None:
             self._relationships.add('sharedStrings', 'sharedStrings.xml')
@@ -143,11 +139,13 @@ class Workbook(XmlElement):
         insert_archive_file('_rels/.rels', self._root_relationships)
         insert_archive_file('docProps/app.xml', self._app_properties)
         insert_archive_file('docProps/core.xml', self._core_properties)
-        insert_archive_file('docProps/custom.xml', self._custom)
+        if self._custom is not None:
+            insert_archive_file('docProps/custom.xml', self._custom)
         insert_archive_file('xl/_rels/workbook.xml.rels', self._relationships)
         insert_archive_file('xl/sharedStrings.xml', self._shared_strings)
         insert_archive_file('xl/styles.xml', self._style_sheet)
-        insert_archive_file('xl/theme/theme1.xml', self._theme)
+        if self._theme is not None:
+            insert_archive_file('xl/theme/theme1.xml', self._theme)
         insert_archive_file('xl/workbook.xml', self)
 
         archive.close()

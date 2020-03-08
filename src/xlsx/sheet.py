@@ -156,47 +156,73 @@ class Sheet(XmlElement):
                 return try_parse(int, style)
         return None
 
-    def insert_row(self, index: int, row_elem: XmlElement = None, copy_index: int = None):
-        if row_elem is None:
-            row_elem = XmlElement.new('row', {'r':str(index)})
-        row = Row(self, row_elem)
+    def _move_rows(self, index: int, count: int):
         if index <= self._last_row_index:
             for i in range(self._last_row_index, index - 1, -1):
                 r = self._rows.get(i)
                 if r is not None:
-                    r.index = i + 1
-                    self._rows[i + 1] = r
-            self._last_row_index += 1
-        self._rows[index] = row
-        if index > self._last_row_index:
-            self._last_row_index = index
+                    r.index = i + count
+                    self._rows[i + count] = r
+            self._last_row_index += count
 
+    def _move_merges(self, index: int, count: int, copy_index: int = None):
         merge_cells: Dict[RangeRef, XmlElement] = {}
         for ref, elem in self._emerge_cells.items():
             if index <= ref.start.row:
-                ref.start.row += 1
+                ref.start.row += count
             if index <= ref.end.row:
-                ref.end.row += 1
+                ref.end.row += count
             elem.attrib['ref'] = ref.to_address()
             if copy_index is not None:
                 if ref.start.row == copy_index and ref.end.row == copy_index:
-                    range_ref = RangeRef(index, ref.start.column, index, ref.end.column)
-                    merge_cells[range_ref] = XmlElement.new('mergeCell', {'ref': range_ref.to_address()})
+                    for i in range(index, index + count):
+                        range_ref = RangeRef(i, ref.start.column, i, ref.end.column)
+                        merge_cells[range_ref] = XmlElement.new('mergeCell', {'ref': range_ref.to_address()})
         if merge_cells:
             self._emerge_cells.update(merge_cells)
+
+    def insert_row(self, index: int, *,
+                   row_elem: XmlElement = None, copy_index: int = None):
+        self._move_rows(index, 1)
+        self._move_merges(index, 1, copy_index)
+
+        if row_elem is None:
+            row_elem = XmlElement.new('row', {'r':str(index)})
+        row = Row(self, row_elem)
+        self._rows[index] = row
+        if index > self._last_row_index:
+            self._last_row_index = index
         return row
 
-    def insert_row_copy_from(self, index: int, copy_index: int, clear_value: bool = False) -> 'Row':
-        copy_row = self._rows.get(copy_index)
-        if copy_row is None:
-            return self.insert_row(index)
-        return self.insert_row(index, copy_row.to_xml(index, clear_value), copy_index)
+    def insert_rows(self, index: int, count: int = 1, *,
+                    copy_index: Optional[int] = None,
+                    clear_value: bool = False):
+        self._move_rows(index, count)
+        self._move_merges(index, count, copy_index)
+
+        copy_row = self._rows.get(copy_index) if copy_index is not None else None
+        for i in range(index, index + count):
+            row_elem = None
+            if copy_row is None:
+                row_elem = XmlElement.new('row', {'r':str(i)})
+            else:
+                row_elem = copy_row.to_xml(i, clear_value)
+            row = Row(self, row_elem)
+            self._rows[i] = row
+        last_row = index + count - 1
+        if last_row > self._last_row_index:
+            self._last_row_index = last_row
 
     def copy_row_to(self, copy_index: int, to_index: int, clear_value: bool = False) -> 'Row':
         if copy_index == to_index:
             return self[copy_index]
         else:
-            return self.insert_row_copy_from(to_index, copy_index, clear_value)
+            copy_row = self._rows.get(copy_index)
+            if copy_row is None:
+                return self.insert_row(to_index)
+            return self.insert_row(to_index, 
+                                   row_elem=copy_row.to_xml(to_index, clear_value),
+                                   copy_index=copy_index)
     
     def to_xmls(self) -> Dict[str, XmlElement]:
         elem = self.deepcopy()
