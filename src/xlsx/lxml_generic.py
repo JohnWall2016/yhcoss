@@ -184,7 +184,6 @@ class GenericElementTree(Generic[AnyStr]):
              **_variables: Any) -> 'GenericElementTree[AnyStr]': ...
 
 
-
 def XML(text: Union[str, bytes]) -> GenericElement:
     return cast(Any, _XML(text))
 

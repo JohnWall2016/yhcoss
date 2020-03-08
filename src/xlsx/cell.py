@@ -127,9 +127,9 @@ class Cell:
         else:
             elem = element.find_by_localname('v')
             if elem is not None and elem.text:
-                if re.match(r'\d+', elem.text):
+                if re.match(r'^\d+$', elem.text):
                     self._value = int(elem.text)
-                elif re.match(r'\d+\.\d+', elem.text):
+                elif re.match(r'^\d+\.\d+$', elem.text):
                     self._value = float(elem.text)
 
         # Parse the formula
@@ -177,7 +177,7 @@ class Cell:
                 f.text = self._formula
             elem.append(f)
         elif not clear_value and self._value is not None:
-            type_: str = ''
+            type_: Optional[str] = None
             text: str = ''
             if self._type == 's' or isinstance(self._value, str) or isinstance(self._value, RichText):
                 type_ = 's'
@@ -188,8 +188,9 @@ class Cell:
             elif isinstance(self._value, int) or isinstance(self._value, float):
                 type_ = ''
                 text = str(self._value)
-            if type_:
-                elem.attrib['t'] = type_
+            if type_ is not None:
+                if type_:
+                    elem.attrib['t'] = type_
                 subelem = XmlElement.new('v')
                 subelem.text = text
                 elem.append(subelem)

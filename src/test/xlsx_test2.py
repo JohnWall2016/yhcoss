@@ -125,6 +125,15 @@ def test_xmlname():
 def test_save():
     wb = Workbook.from_file('./data/test.xlsx')
     wb[0].cell('B4').value = '刘德华'
+
+    sheet = wb[0]
+    frow = 4
+    count = 20
+    for r in range(frow, frow + count):
+        row = sheet.copy_row_to(frow, r, True)
+        row.cell('B').value = '刘德华2'
+        row.cell('E').value = 93.7
+
     wb.save_file('./data/test2.xlsx')
 
 #test()
