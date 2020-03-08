@@ -132,7 +132,7 @@ class Workbook(XmlElement):
             self._sheets_elem.append(sheet_xmls['id'])
             insert_archive_file(f'xl/worksheets/sheet{i + 1}.xml', sheet_xmls['sheet'])
             relationships_elem = sheet_xmls['relationships']
-            if relationships_elem is not None:
+            if relationships_elem:
                 insert_archive_file(f'xl/worksheets/_rels/sheet{i + 1}.xml.rels', relationships_elem)
 
         insert_archive_file('[Content_Types].xml', self._content_types)
