@@ -128,9 +128,12 @@ def test_save():
 
     sheet = wb[0]
     frow = 4
-    count = 20
+    count = 20000
     for r in range(frow, frow + count):
+        index = r - frow + 1
+        print(r)
         row = sheet.copy_row_to(frow, r, True)
+        row.cell('A').value = index
         row.cell('B').value = '刘德华2'
         row.cell('E').value = 93.7
 
