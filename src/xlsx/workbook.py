@@ -1,8 +1,8 @@
 from zipfile import ZipFile, ZIP_DEFLATED
-from lxml.etree import QName, XML, ElementTree
-from typing import *
+from typing import Callable, Optional, List, Dict, cast, Final
 
-from .xmlutils import XmlElement, GenericElement, try_parse, try_parse_default
+from .lxml_generic import XML, QName, ElementTree, GenericElement
+from .xmlutils import XmlElement, try_parse, try_parse_default
 from .shared_strings import SharedStrings
 from .content_types import ContentTypes
 from .app_properties import AppProperties
@@ -10,13 +10,27 @@ from .core_properties import CoreProperties
 from .relationships import Relationships
 from .style_sheet import StyleSheet
 
-from .sheet import *
+from .sheet import Sheet
 
 
 class Workbook(XmlElement):
-    def __init__(self, element: XmlElement,
-                 get_xml: Callable[[str], Optional[XmlElement]]):
-        super().__init__(element)
+    def __init__(self, archive: ZipFile):
+
+        def get_xml(path: str) -> Optional[XmlElement]:
+                nonlocal archive
+                if not archive.NameToInfo.get(path):
+                    return None
+                elem = XML(archive.read(path))
+                if (isinstance(elem.tag, bytes) or (isinstance(elem.tag, QName) and 
+                                                    isinstance(elem.tag.localname, bytes))):
+                     raise Exception('Must be Unicode xml file')
+                return XmlElement(ElementTree(cast(GenericElement[str], elem)).getroot())
+
+        elem = get_xml('xl/workbook.xml')
+        if elem is None:
+            raise Exception("Cannot read 'xl/workbook.xml'")
+        super().__init__(elem)
+
         self._max_sheet_id: int = 0
         self._sheets: List[Sheet] = []
 
@@ -26,7 +40,7 @@ class Workbook(XmlElement):
 
         elem = get_xml('_rels/.rels') # TODO
         if elem is not None:
-            self._rels = Relationships(elem)
+            self._root_relationships = Relationships(elem)
 
         elem = get_xml('docProps/app.xml')
         if elem is not None:
@@ -57,8 +71,8 @@ class Workbook(XmlElement):
         if self._relationships.find_by_type('sharedStrings') is None:
             self._relationships.add('sharedStrings', 'sharedStrings.xml')
 
-        if self._content_types.find_by_part_name('/xl/sharedStrings.xml') is None:
-            self._content_types.add('/xl/sharedStrings.xml', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml')
+        if self._content_types.find_by_part_name('xl/sharedStrings.xml') is None:
+            self._content_types.add('xl/sharedStrings.xml', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sharedStrings+xml')
 
         self._sheets_elem = self.find_by_localname('sheets')
         if self._sheets_elem is not None:
@@ -78,24 +92,7 @@ class Workbook(XmlElement):
     @staticmethod
     def from_file(filename: str):
         with ZipFile(filename) as archive:
-
-            def get_xml(path: str) -> Optional[XmlElement]:
-                nonlocal archive
-                if not archive.NameToInfo.get(path):
-                    return None
-                elem = XML(archive.read(path))
-                if (isinstance(elem.tag, bytes) or (isinstance(elem.tag, QName) and 
-                                                    isinstance(elem.tag.localname, bytes))):
-                     raise Exception('Must be Unicode xml file')
-                return XmlElement(ElementTree(cast(GenericElement[str], elem)).getroot())
-
-            #for f in archive.NameToInfo:
-            #    print(f)
-            wb_elem = get_xml('xl/workbook.xml')
-            if wb_elem is None:
-                raise Exception('Cannot read \'xl/workbook.xml\'')
-            wb = Workbook(wb_elem, get_xml)
-            return wb
+            return Workbook(archive)
 
     def save_file(self, filename: str):
         archive = ZipFile(filename, 'w', ZIP_DEFLATED, allowZip64=True)
@@ -140,10 +137,10 @@ class Workbook(XmlElement):
             insert_archive_file(f'xl/worksheets/sheet{i + 1}.xml', sheet_xmls['sheet'])
             relationships_elem = sheet_xmls['relationships']
             if relationships_elem is not None:
-                insert_archive_file(f'/xl/worksheets/_rels/sheet{i + 1}.xml.rels', relationships_elem)
+                insert_archive_file(f'xl/worksheets/_rels/sheet{i + 1}.xml.rels', relationships_elem)
 
         insert_archive_file('[Content_Types].xml', self._content_types)
-        insert_archive_file('_rels/.rels', self._rels)
+        insert_archive_file('_rels/.rels', self._root_relationships)
         insert_archive_file('docProps/app.xml', self._app_properties)
         insert_archive_file('docProps/core.xml', self._core_properties)
         insert_archive_file('docProps/custom.xml', self._custom)

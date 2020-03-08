@@ -1,8 +1,8 @@
 from copy import deepcopy
-from typing import (Callable, Iterable, Iterator, Optional, cast, Union, Dict, Mapping,
-                    Any, TypeVar, List)
-from lxml.etree import tostring, Element
-from ..typings.lxml.types import GenericElement, GenericAttrib, GenericQName
+from typing import (Callable, Iterable, Iterator, Optional, cast, Union, Dict,
+                    Mapping, Any, TypeVar, List)
+from .lxml_generic import (GenericQName, GenericElement, GenericAttrib, Element,
+                           tostring)
 
 DictStr = Dict[str, str]
 NSMap = Dict[Optional[str], str]

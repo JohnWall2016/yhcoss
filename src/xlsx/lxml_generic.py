@@ -1,11 +1,15 @@
 from typing import (Generic, Iterable, Iterator, Sized, Union, List, Dict, Mapping,
                     Optional, overload, AnyStr, Any, Tuple, Sequence, TypeVar, IO,
                     cast)
-from lxml.etree import XPath, XMLParser, XSLT, XSLTAccessControl, QName
+from lxml.etree import (XPath, XMLParser, XSLT, XSLTAccessControl, QName, 
+                        Element as _Element, XML as _XML, tostring as _tostring,
+                        ElementTree as _ElementTree)
 
 
 AnySmartStr = Union['ElementUnicodeResult', 'PyElementUnicodeResult', 'ElementStringResult']
-XPathObject = Union[bool, float, AnySmartStr, AnyStr, List[Union['GenericElement', AnySmartStr, AnyStr, Tuple[Optional[AnyStr], Optional[AnyStr]]]]]
+XPathObject = Union[bool, float, AnySmartStr, AnyStr, 
+                    List[Union['GenericElement', AnySmartStr, AnyStr, Tuple[Optional[AnyStr], 
+                                Optional[AnyStr]]]]]
 ListAnyStr = List[AnyStr]
 DictAnyStr = Dict[AnyStr, AnyStr]
 Dict_Tuple2AnyStr_Any = Dict[Tuple[AnyStr], Any]
@@ -179,4 +183,48 @@ class GenericElementTree(Generic[AnyStr]):
              access_control: Optional[XSLTAccessControl] = ...,
              **_variables: Any) -> 'GenericElementTree[AnyStr]': ...
 
+
+
+def XML(text: Union[str, bytes]) -> GenericElement:
+    return cast(Any, _XML(text))
+
+_NSMap = Union[Dict[Optional[str], str], Dict[Optional[bytes], bytes]]
+
+def Element(_tag: AnyStr,
+            attrib: Optional[DictAnyStr] = None,
+            nsmap: Optional[_NSMap] = None,
+            **extra: AnyStr) -> GenericElement[AnyStr]:
+    return cast(Any, _Element(_tag, attrib, nsmap, **extra))
+
+def tostring(element_or_tree: Union[GenericElement[AnyStr], GenericElementTree[AnyStr]],
+             *,
+             encoding: Union[str, type] = None,
+             method: str = 'xml',
+             xml_declaration: bool = None,
+             pretty_print: bool = False,
+             with_tail: bool = True,
+             standalone: bool = None,
+             doctype: str = None,
+             exclusive: bool = False,
+             inclusive_ns_prefixes: Any = None,
+             with_comments: bool = True,
+             strip_text: bool = False) -> AnyStr:
+    return _tostring(cast(Any, element_or_tree), 
+                     encoding=encoding, 
+                     method=method,
+                     xml_declaration=xml_declaration,
+                     pretty_print=pretty_print, 
+                     with_tail=with_tail, 
+                     standalone=standalone,
+                     doctype=doctype,
+                     exclusive=exclusive,
+                     inclusive_ns_prefixes=inclusive_ns_prefixes,
+                     with_comments=with_comments,
+                     strip_text=strip_text)
+
+def ElementTree(element: GenericElement[AnyStr] = None,
+                *,
+                file: Union[AnyStr, IO[Any]] = None,
+                parser: XMLParser = None) -> GenericElementTree[AnyStr]:
+    return cast(Any, _ElementTree(cast(Any, element), file=file, parser=parser))
 

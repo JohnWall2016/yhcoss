@@ -22,8 +22,6 @@ from typing import (
 
 from typing_extensions import Protocol
 
-from .types import GenericElement as _GenericElement, GenericElementTree as _GenericElementTree
-
 # dummy for missing stubs
 def __getattr__(name: str) -> Any: ...
 
@@ -31,7 +29,7 @@ def __getattr__(name: str) -> Any: ...
 # unnecessary constraint. It seems reasonable to constrain each
 # List/Dict argument to use one type consistently, though, and it is
 # necessary in order to keep these brief.
-_AnyStr = TypeVar('_AnyStr', str, bytes) #AnyStr
+_AnyStr = AnyStr # TypeVar('_AnyStr', str, bytes)
 _AnySmartStr = Union['_ElementUnicodeResult', '_PyElementUnicodeResult', '_ElementStringResult']
 # XPath object - http://lxml.de/xpathxslt.html#xpath-return-values
 _XPathObject = Union[bool, float, _AnySmartStr, _AnyStr, List[Union['_Element', _AnySmartStr, _AnyStr, Tuple[Optional[_AnyStr], Optional[_AnyStr]]]]]
@@ -256,18 +254,19 @@ class XSLT:
 
 def Comment(text: Optional[_AnyStr] = ...) -> _Comment: ...
 
-def XML(text: Union[str, bytes]) -> _GenericElement[_AnyStr]: ...
+def XML(text: Union[str, bytes]) -> _Element: ...
 def Element(_tag: _AnyStr,
             attrib: Optional[_DictAnyStr] = ...,
             nsmap: Optional[_NSMap] = ...,
-            **extra: _AnyStr) -> _GenericElement[_AnyStr]: ...
+            **extra: _AnyStr) -> _Element: ...
 def SubElement(_parent: _Element, _tag: _AnyStr,
                attrib: Optional[_DictAnyStr] = ...,
                nsmap: Optional[_NSMap] = ...,
                **extra: _AnyStr) -> _Element: ...
-def ElementTree(element: _GenericElement[_AnyStr] = ...,
-                file: Union[_AnyStr, IO[Any]] = ...,
-                parser: XMLParser = ...) -> _GenericElementTree[_AnyStr]: ...
+def ElementTree(element: _Element = ...,
+                *,
+                file: Optional[Union[_AnyStr, IO[Any]]] = ...,
+                parser: Optional[XMLParser] = ...) -> _ElementTree: ...
 def ProcessingInstruction(
         target: _AnyStr,
         text: _AnyStr = ...
@@ -286,17 +285,19 @@ def fromstring(text: _AnyStr,
                parser: XMLParser = ...,
                *,
                base_url: _AnyStr = ...) -> _Element: ...
-def tostring(element_or_tree: Union[_GenericElement[_AnyStr], _GenericElementTree[_AnyStr]],
-             encoding: Union[str, type] = ...,
+def tostring(element_or_tree: Union[_Element, _ElementTree],
+             *,
+             encoding: Optional[Union[str, type]] = ...,
              method: str = ...,
-             xml_declaration: bool = ...,
+             xml_declaration: Optional[bool] = ...,
              pretty_print: bool = ...,
              with_tail: bool = ...,
-             standalone: bool = ...,
-             doctype: str = ...,
+             standalone: Optional[bool] = ...,
+             doctype: Optional[str] = ...,
              exclusive: bool = ...,
+             inclusive_ns_prefixes: Any = ...,
              with_comments: bool = ...,
-             inclusive_ns_prefixes: Any = ...) -> _AnyStr: ...
+             strip_text: bool = ...,) -> _AnyStr: ...
 
 class _ErrorLog: ...
 

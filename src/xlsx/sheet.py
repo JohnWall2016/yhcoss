@@ -4,7 +4,7 @@ from .address_converter import RangeRef, CellRef
 from .relationships import Relationships
 from .xmlutils import XmlElement, try_parse, XmlNamespace
 
-from .row import *
+from .row import Row, Cell
 from .range import Range
 
 import src.xlsx.workbook as wb
