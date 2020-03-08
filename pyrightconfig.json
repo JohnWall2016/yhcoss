@@ -3,5 +3,5 @@
     "venv": ".venv",
     "reportMissingTypeStubs": "warning",
     "typeshedPath": "../typeshed",
-    "typingsPath": "./src/typings"
+    "typingsPath": "./typings"
 }
