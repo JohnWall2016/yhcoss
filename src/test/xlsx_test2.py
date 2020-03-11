@@ -1,5 +1,5 @@
-from ..xlsx.workbook import *
-from ..xlsx.xmlutils import *
+from ..excel.xlsx.workbook import *
+from ..excel.xlsx.xmlutils import *
 from typing import *
 
 def test():

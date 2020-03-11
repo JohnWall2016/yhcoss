@@ -13,7 +13,7 @@ engine = create_engine(mysql_engine_jzfp2020)
 Base: Any = declarative_base()
 
 
-class FPData:
+class FPData():
     no = Column(Integer, primary_key=True)  # 序号
     xzj = Column(String)  # 乡镇街
     csq = Column(String)  # 村社区
@@ -41,8 +41,9 @@ class FPData:
     jbcbqk_date = Column('jbcbqkdate', String)  # 居保参保情况日期
 
 
-class FPHistoryData(FPData):
+class FPHistoryData(Base, FPData):
     __tablename__ = 'fphistorydata'
+
 
 T = TypeVar('T')
 
@@ -60,7 +61,7 @@ _Session = sessionmaker(bind=engine)
 
 class Session:
     def __init__(self):
-        self._session: DBSession = _Session()
+        self._session = _Session()
 
     def __enter__(self) -> DBSession:
         return self._session

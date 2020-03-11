@@ -4,3 +4,4 @@ __pycache__
 *.pyc
 *_internal.py
 .venv
+excel.orig

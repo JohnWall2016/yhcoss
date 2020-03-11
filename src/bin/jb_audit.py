@@ -2,6 +2,7 @@ import click
 from ..base.utils import to_dashdate
 from ..jb.session import Cbsh, CbshQuery, Session
 from ..jb import database as db
+from ..xlsx.workbook import Workbook
 
 
 @click.command()
@@ -27,18 +28,18 @@ def audit(start_date:str='', end_date:str=''):
         session.request_service(CbshQuery.new(start_date, end_date or ''))
         result = session.get_result(Cbsh)
 
-    if result:
+    if result is not None:
         with db.Session() as session:
-            index = 1
-            for cbsh in result.datas:
-                r = session.query(db.FPHistoryData).filter_by(
-                    idcard=cbsh.idcard).first()
-                if r:
-                    print(f'{index:3}. {cbsh.idcard} {cbsh.name} {cbsh.birthday} ' + 
-                          f'{r.jbrdsf} {r.name if r.name != cbsh.name else ""}')
-                else:
-                    print(f'{index:3}. {cbsh.idcard} {cbsh.name} {cbsh.birthday}')
-                index += 1
+            if len(result.datas):
+                index = 1
+                for cbsh in result.datas:
+                    r = session.query(db.FPHistoryData).filter_by(idcard=cbsh.idcard).first()
+                    if r:
+                        print(f'{index:3}. {cbsh.idcard} {cbsh.name} {cbsh.birthday} ' + 
+                              f'{r.jbrdsf} {r.name if r.name != cbsh.name else ""}')
+                    else:
+                        print(f'{index:3}. {cbsh.idcard} {cbsh.name} {cbsh.birthday}')
+                    index += 1
 
 
 if __name__ == '__main__':

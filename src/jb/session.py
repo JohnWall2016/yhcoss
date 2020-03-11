@@ -64,10 +64,10 @@ class Service(Jsonable):
 
 
 T = TypeVar('T')
-U = TypeVar('U', bound='Jsonable')
+U = TypeVar('U', bound='Result')
 
 
-class Result(Protocol, Jsonable, Generic[T]):
+class Result(Protocol, Generic[T]):
     rowcount: str
     page: int
     pagesize: int
@@ -94,7 +94,7 @@ class Result(Protocol, Jsonable, Generic[T]):
 
 def result_class(cls: Type[T]) -> Type[Result[T]]:
     @dataclass
-    class _Result(Jsonable):
+    class _Result(Jsonable, Result[T]):
         rowcount: int
         page: int
         pagesize: int
@@ -224,12 +224,12 @@ def match(value, dict: Dict, fail=lambda v: f'未知值: {v}'):
     return dict.get(value, fail(value))
 
 
-class _Sbstate(Any):
+class _Sbstate():
     #cbstate: Optional[str] = None
     #jfstate: Optional[str] = None
 
     @property
-    def cbstate_ch(self):
+    def cbstate_ch(self: Any):
         return match(self.cbstate,
                      {
                          "0": "未参保",
@@ -239,7 +239,7 @@ class _Sbstate(Any):
                      })
 
     @property
-    def jfstate_ch(self):
+    def jfstate_ch(self: Any):
         return match(self.jfstate,
                      {
                          "1": "参保缴费",
@@ -248,7 +248,7 @@ class _Sbstate(Any):
                      })
 
     @property
-    def jbstate_cn(self):
+    def jbstate_cn(self: Any):
         return Sbstate.get_jbstate_cn(self.jfstate, self.cbstate)
 
     @staticmethod
