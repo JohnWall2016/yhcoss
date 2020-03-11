@@ -2,7 +2,7 @@ import click
 from ..base.utils import to_dashdate
 from ..jb.session import Cbsh, CbshQuery, Session
 from ..jb import database as db
-from ..xlsx.workbook import Workbook
+from ..excel.xls import Workbook
 
 
 @click.command()
