@@ -333,6 +333,9 @@ class Workbook(object):
     def add_str(self, s):
         return self.__sst.add_str(s)
 
+    def get_str(self, idx):
+        return self.__sst.get_str(idx)
+
     def del_str(self, sst_idx):
         self.__sst.del_str(sst_idx)
 

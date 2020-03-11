@@ -1175,8 +1175,13 @@ class Worksheet(object):
                 self.first_used_row = indx
         return self.__rows[indx]
 
-    def copy_row(self, findx, tindx):
-        self.__rows[tindx] = self.__rows[findx].copy_to(tindx)
+    def copy_row(self, findx, tindx) -> 'Row':
+        if findx == tindx:
+            return self.__rows[findx]
+        else:
+            row = self.__rows[findx].copy_to(tindx)
+            self.__rows[tindx] = row
+            return row
 
     def copy_row_style(self, findx, tindx):
         self.__rows[findx].copy_style_to(self.row(tindx))

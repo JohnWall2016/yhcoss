@@ -10,6 +10,7 @@ class SharedStringTable(object):
     def __init__(self, encoding):
         self.encoding = encoding
         self._str_indexes = {}
+        self._index_strings = {}
         self._rt_indexes = {}
         self._tally = []
         self._add_calls = 0
@@ -27,6 +28,7 @@ class SharedStringTable(object):
         if s not in self._str_indexes:
             idx = len(self._str_indexes) + len(self._rt_indexes)
             self._str_indexes[s] = idx
+            self._index_strings[idx] = s
             self._tally.append(1)
         else:
             idx = self._str_indexes[s]
@@ -63,6 +65,9 @@ class SharedStringTable(object):
 
     def str_index(self, s):
         return self._str_indexes[s]
+
+    def get_str(self, idx):
+        return self._index_strings[idx]
 
     def rt_index(self, rt):
         return self._rt_indexes[rt]
@@ -1732,10 +1737,10 @@ class RefModeRecord(BiffRecord):
     """
     This record is part of the Calculation Settings Block.
     It stores which method is used to show cell addresses in formulas.
-    The “RC” mode uses numeric indexes for rows and columns,
-    i.e. “R(1)C(-1)”, or “R1C1:R2C2”.
-    The “A1” mode uses characters for columns and numbers for rows,
-    i.e. “B1”, or “$A$1:$B$2”.
+    The ï¿½RCï¿½ mode uses numeric indexes for rows and columns,
+    i.e. ï¿½R(1)C(-1)ï¿½, or ï¿½R1C1:R2C2ï¿½.
+    The ï¿½A1ï¿½ mode uses characters for columns and numbers for rows,
+    i.e. ï¿½B1ï¿½, or ï¿½$A$1:$B$2ï¿½.
 
     Record REFMODE, BIFF2-BIFF8:
 
@@ -1783,7 +1788,7 @@ class DeltaRecord(BiffRecord):
 class SaveRecalcRecord(BiffRecord):
     """
     This record is part of the Calculation Settings Block.
-    It contains the “Recalculate before save” option in
+    It contains the ï¿½Recalculate before saveï¿½ option in
     Excel's calculation settings dialogue.
 
     Record SAVERECALC, BIFF3-BIFF8:
@@ -2449,7 +2454,7 @@ class ExternnameRecord(BiffRecord):
     0       0001H   0 = Standard name; 1 = Built-in name
     1       0002H   0 = Manual link; 1 = Automatic link (DDE links and OLE links only)
     2       0004H   1 = Picture link (DDE links and OLE links only)
-    3       0008H   1 = This is the “StdDocumentName” identifier (DDE links only)
+    3       0008H   1 = This is the ï¿½StdDocumentNameï¿½ identifier (DDE links only)
     4       0010H   1 = OLE link
     14-5    7FE0H   Clipboard format of last successful update (DDE links and OLE links only)
     15      8000H   1 = Iconified picture link (BIFF8 OLE links only)

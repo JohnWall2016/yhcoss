@@ -9,6 +9,8 @@ import datetime as dt
 from .Formatting import Font
 from .compat import basestring, xrange, int_types, iteritems
 
+from typing import Union
+
 try:
     from decimal import Decimal
 except ImportError:
@@ -231,7 +233,7 @@ class Row(object):
         xf_index = self.__parent_wb.add_style(style)
         self.insert_cell(colx, ErrorCell(self.__idx, colx, xf_index, error_string_or_code))
 
-    def update(self, col, label):
+    def update(self, col: int, label):
         if col in self.__cells:
             style_index = self.__cells[col].xf_idx
             if isinstance(label, basestring):
@@ -390,4 +392,20 @@ class Row(object):
             print(cell)
             if isinstance(cell, StrCell):
                 print(cell.sst_idx)
+
+    def value(self, col: int) -> Union[str, float, int, None]:
+        if col in self.__cells:
+            cell = self.__cells[col]
+            if isinstance(cell, StrCell):
+                return self.__parent_wb.get_str(cell.sst_idx)
+            elif isinstance(cell, NumberCell):
+                return self.number
+            elif isinstance(cell, BooleanCell):
+                return self.number
+            elif isinstance(cell, BlankCell) and isinstance(cell, MulBlankCell):
+                return ''
+            else:
+                return None
+        else:
+            return None
             
